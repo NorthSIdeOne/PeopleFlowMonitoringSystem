@@ -7,27 +7,47 @@
 'use strict';
 const config = require('./configurationFile');
 const mysql = require('mysql');
+const util = require("util");
 
-const dbCon = mysql.createConnection({
-
-    host:     config.HOST,
-    user:     config.USER,
-    password: config.PASSWORD,
-    database: config.DATABSE
-
-});
 
 /**
- *  Connect to the database.If the databse is not runnig
- * an error will be displayed.If is working a message will
- * be displayed.
+ *This class is used to connect to the database and
+ * make querys.In future can have more methods add.
+ *
+ * @type {DataBaseClass} Class for database query and
+ * for database connection.
  */
-dbCon.connect(function(err) {
-    if (err) {
-      console.error('Error connecting: ' + err.stack);
-      return;
-    }
-    console.log('Connected as id ' + dbCon.threadId);
-  });
 
-  module.exports=dbCon;
+let mysqlDB = class DataBaseClass{
+
+    /**
+     *This function is used to return a query function
+     * where a connection to the database is made then a
+     * function is returned with the connection.The returned
+     * function takes a query as a parametr and returns a promise.
+     *
+     * @returns a query function that return a promise.
+     */
+    queryDataBase(){
+        const dbCon = mysql.createConnection({
+
+            host:     config.HOST,
+            user:     config.USER,
+            password: config.PASSWORD,
+            database: config.DATABASE
+
+        });
+        return {
+            query( query, args ) {
+                return util.promisify( dbCon.query )
+                    .call( dbCon, query, args );
+            },
+            close() {
+                return util.promisify( dbCon.end ).call( dbCon );
+            }
+        };
+    }
+
+}
+
+  module.exports=mysqlDB;

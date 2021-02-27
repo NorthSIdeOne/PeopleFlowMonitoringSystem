@@ -39,15 +39,20 @@ var device =
         this.CH   = [];
         this.SSID = [];
     },
-    getData:function(req,res){
-        var query = "SELECT * FROM sniffer";
-        dbCon.query(query, (error, results) => {
-            if (error) {
-              return console.error(error.message);
-            }
-           res.send(results) 
-        });
-        
+    getData:async function (req, res) {
+
+        const query = "SELECT * FROM sniffer";
+        const db = (new dbCon).queryDataBase();
+
+        try {
+            const someRows = await db.query(query);
+            res.send(someRows);
+        } catch (err) {
+            console.log(new Error(err.message));
+        } finally {
+            await db.close();
+        }
+
     }
 
 }
