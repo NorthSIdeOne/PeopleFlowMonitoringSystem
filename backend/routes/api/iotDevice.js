@@ -3,12 +3,18 @@ const router = express.Router();
 
 const deviceCotroller =   require('../../controller/iotDevice.controller');
 
-//Insert data from sniffer into database
+/**
+ * Insert json information into database.
+ */
 router.post('/',deviceCotroller.uploadData);
 
-router.get('/',(req,res)=>{
+/**
+ * Get all data from the databse.
+ */
+router.get('/',async (req,res)=>{
+
+    res.send(await deviceCotroller.getDeviceData(req,res));
     console.log("Sensor data from database was sent")
-    deviceCotroller.getDeviceData(req,res);
 });
 
 module.exports = router;

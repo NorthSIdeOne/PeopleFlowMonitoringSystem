@@ -1,15 +1,16 @@
 'use strict';
-const device = require('../models/iotDevice.model');
+const node = require('../models/iotDevice.model');
 
 exports.uploadData = function(req, res) {
-    
-    device.uploadData(req,res);
+
+    const nodeObj = new node();
+    nodeObj.uploadData(req,res);
 
 };
 
-exports.getDeviceData=function(req,res){
-   
-    device.getDeviceData(req,res);
+exports.getDeviceData=async function(req,res){
+
+    return (await (new node()).getData())
     
 }
 
