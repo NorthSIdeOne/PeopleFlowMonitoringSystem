@@ -1,6 +1,6 @@
 'use strict';
-const dbCon = require('../config/db.config');
-const config = require('../config/configurationFile');
+const dbCon = require('../database/DATABASE');
+const config = require('../config/CONFIGURATION');
 
 
 let node = class NodeClass{
@@ -68,7 +68,7 @@ let node = class NodeClass{
      */
     async getData() {
 
-        const db = (new dbCon).queryDataBase();
+        const db = (new dbCon).createQuery();
 
         try {
             return  await db.query(this.SELECT_QUERY);
@@ -93,7 +93,7 @@ let node = class NodeClass{
             values[i] = [this.mac[i], this.rssi[i], this.ch[i], this.ssid[i] ,this.nodeName];
         }
 
-        const db = (new dbCon).queryDataBase();
+        const db = (new dbCon).createQuery();
         try {
             for (const elements of values) {
                 await db.query(this.INSERT_QUERY,elements);

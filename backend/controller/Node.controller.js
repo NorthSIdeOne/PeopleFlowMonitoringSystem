@@ -1,5 +1,5 @@
 'use strict';
-const node = require('../models/iotDevice.model');
+const node = require('../models/Node.model');
 
 exports.uploadData = function(req, res) {
 
