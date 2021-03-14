@@ -1,69 +1,115 @@
 'use strict';
 const dbCon = require('../config/db.config');
+const config = require('../config/configurationFile');
 
-var device = 
-{
-    MAC:[],
-    RSSI:[],
-    CH:[],
-    SSID:[],
 
-    addData:function(data){
-        data.forEach(element => {
-            this.MAC.push(element.MAC);
-            this.RSSI.push(element.RSSI);
-            this.CH.push(element.CH);
-            this.SSID.push(element.SSID);
-        }); 
-    },
-    insertData:function(){
+let node = class NodeClass{
 
-        var i=0;
-        while(i < this.MAC.length)
-        {
-            //Create query
-            var query = "INSERT INTO sniffer (MAC,RSSI,CH,SSID) VALUES (?,?,?,?);";
-            //Add data
-            var values = [this.MAC[i],this.RSSI[i],this.CH[i],this.SSID[i]];
-            //Insert data
-            dbCon.query(query,values);
-            i++;
+    mac  = [];
+    rssi = [];
+    ch   = [];
+    ssid = [];
+
+    INSERT_QUERY = `INSERT INTO ${config.DATA_TABLE} (MAC,RSSI,CH,SSID) VALUES (?,?,?,?)`;
+    SELECT_QUERY = `SELECT * FROM ${config.DATA_TABLE}`;
+
+    INSERT_SUCCESFULL_MESSAGE = "Insert succesfully!";
+    SELECT_SUCCESFULL_MESSAGE = "Select query success!"
+    UPLOAD_DATA_SUCCESSFUL    = "Data was upload to the database."
+
+    /**
+     * This function populate mac,rssi,ch,ssid arrays
+     * from this class.
+     *
+     * @param data json that contains all informations recived
+     *        from request.
+     */
+    addData(data){
+        data.forEach(element =>{
+            this.mac.push(element.MAC);
+            this.rssi.push(element.RSSI);
+            this.ch.push(element.CH);
+            this.ssid.push(element.SSID);
+        })
+    }
+
+    /**
+     * This function is used to delete all the
+     * data stored in the class arrays.
+     */
+    deleteData(){
+        this.mac  = [];
+        this.rssi = [];
+        this.ch   = [];
+        this.ssid = [];
+    }
+
+    /**
+     *  This function is used to get all the data from the
+     *  database.
+     *
+     */
+    async getData() {
+
+        const db = (new dbCon).queryDataBase();
+
+        try {
+            return  await db.query(this.SELECT_QUERY);
+        } catch (err) {
+            console.log(new Error(err.message));
+        } finally {
+            await db.close();
+            console.log(this.SELECT_SUCCESFULL_MESSAGE);
         }
 
-        
-        console.log("Insert succesfully");
-    },
-    deleteData:function(){
-        this.MAC  = [];
-        this.RSSI = [];
-        this.CH   = [];
-        this.SSID = [];
-    },
-    getData:function(req,res){
-        var query = "SELECT * FROM sniffer";
-        dbCon.query(query, (error, results) => {
-            if (error) {
-              return console.error(error.message);
+    }
+
+    /**
+     * This function is used to insert data in the database.
+     * The data used for insertion is the data from the arrays.
+     *
+     */
+    async insertData(){
+
+        var values = [];
+        for (var i = 0; i < this.mac.length; i++) {
+            values[i] = [this.mac[i], this.rssi[i], this.ch[i], this.ssid[i]];
+        }
+
+        const db = (new dbCon).queryDataBase();
+        try {
+            for (const elements of values) {
+                await db.query(this.INSERT_QUERY,elements);
             }
-           res.send(results) 
-        });
-        
+        } catch (err) {
+            console.log(new Error(err.message));
+        } finally {
+            await db.close();
+            console.log(this.INSERT_SUCCESFULL_MESSAGE);
+
+        }
+
+
+    }
+
+    /**
+     *   This function is used to upload data in the database.
+     * The data is recived as request,the information is used in
+     * addData(data) and after that it continue with insertion and
+     * empty the arrays.
+     *
+     * @param req request
+     * @param res response
+     */
+     async uploadData(req,res){
+         this.addData(req.body)
+         await this.insertData()
+             .then(this.deleteData())
+             .then(console.log(this.UPLOAD_DATA_SUCCESSFUL))
+             .then(res.sendStatus(200));
     }
 
 }
 
-//Insert data into DB
-device.uploadData = function(req,res){
-        
-    device.addData(req.body)
-    device.insertData();
-    device.deleteData();
-    res.sendStatus(200);
-    
-}
-//Get all data from DB
-device.getDeviceData = function(req,res){
-    device.getData(req,res)
-}
 
-module.exports = device;
+module.exports = node;

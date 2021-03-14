@@ -10,5 +10,6 @@ HOST     : "localhost",
 USER     :  "root",
 PASSWORD :  "",
 DATABASE :  "sniffer_test",
+DATA_TABLE: "sniffer",
 
 }
