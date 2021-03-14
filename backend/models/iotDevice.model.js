@@ -9,9 +9,10 @@ let node = class NodeClass{
     rssi = [];
     ch   = [];
     ssid = [];
+    nodeName = "Unknown";
 
-    INSERT_QUERY = `INSERT INTO ${config.DATA_TABLE} (MAC,RSSI,CH,SSID) VALUES (?,?,?,?)`;
-    SELECT_QUERY = `SELECT * FROM ${config.DATA_TABLE}`;
+    INSERT_QUERY = `INSERT INTO ${config.COLLECTED_DATA_SNIFFERS} (MAC,RSSI,CH,SSID,NODE_NAME) VALUES (?,?,?,?,?)`;
+    SELECT_QUERY = `SELECT * FROM ${config.COLLECTED_DATA_SNIFFERS}`;
 
     INSERT_SUCCESFULL_MESSAGE = "Insert succesfully!";
     SELECT_SUCCESFULL_MESSAGE = "Select query success!"
@@ -25,12 +26,21 @@ let node = class NodeClass{
      *        from request.
      */
     addData(data){
-        data.forEach(element =>{
-            this.mac.push(element.MAC);
-            this.rssi.push(element.RSSI);
-            this.ch.push(element.CH);
-            this.ssid.push(element.SSID);
-        })
+
+        this.nodeName = "Unknown";
+        try {
+            data.forEach(element =>{
+                this.mac.push(element.MAC);
+                this.rssi.push(element.RSSI);
+                this.ch.push(element.CH);
+                this.ssid.push(element.SSID);
+                this.nodeName = element.NODE_NAME;
+            })
+        }
+        catch (err) {
+            console.log("ERROR at reading data from node : "+ err.message);
+
+        }
     }
 
     /**
@@ -38,10 +48,17 @@ let node = class NodeClass{
      * data stored in the class arrays.
      */
     deleteData(){
-        this.mac  = [];
-        this.rssi = [];
-        this.ch   = [];
-        this.ssid = [];
+        try {
+            this.mac  = [];
+            this.rssi = [];
+            this.ch   = [];
+            this.ssid = [];
+            this.nodeName = "Unknown";
+        }
+        catch (err){
+            console.log(err.message);
+        }
+
     }
 
     /**
@@ -73,7 +90,7 @@ let node = class NodeClass{
 
         var values = [];
         for (var i = 0; i < this.mac.length; i++) {
-            values[i] = [this.mac[i], this.rssi[i], this.ch[i], this.ssid[i]];
+            values[i] = [this.mac[i], this.rssi[i], this.ch[i], this.ssid[i] ,this.nodeName];
         }
 
         const db = (new dbCon).queryDataBase();
@@ -88,8 +105,6 @@ let node = class NodeClass{
             console.log(this.INSERT_SUCCESFULL_MESSAGE);
 
         }
-
-
     }
 
     /**
@@ -102,11 +117,17 @@ let node = class NodeClass{
      * @param res response
      */
      async uploadData(req,res){
-         this.addData(req.body)
-         await this.insertData()
-             .then(this.deleteData())
-             .then(console.log(this.UPLOAD_DATA_SUCCESSFUL))
-             .then(res.sendStatus(200));
+         try {
+             this.addData(req.body)
+             await this.insertData()
+                 .then(this.deleteData())
+                 .then(console.log(this.UPLOAD_DATA_SUCCESSFUL))
+                 .then(res.sendStatus(200));
+         }
+         catch (err){
+             console.log("ERROR AT UPLOAD DATA");
+             console.log(err.message);
+         }
     }
 
 }
