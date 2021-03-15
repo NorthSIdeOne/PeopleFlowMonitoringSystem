@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const deviceCotroller =   require('../../controller/iotDevice.controller');
+const deviceCotroller =   require('../../controller/Node.controller');
 
 /**
  * Insert json information into database.

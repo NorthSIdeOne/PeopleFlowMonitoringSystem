@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const t = require("./models/ProcessData.model")
 
 
 const app = express();
@@ -8,7 +9,7 @@ const app = express();
 //Middleware
 app.use(bodyParser.json());
 app.use(cors());
-const iotDevice = require('./routes/api/iotDevice');
+const iotDevice = require('./routes/api/Node');
 
 app.use('/api/sensor_data',iotDevice);
 

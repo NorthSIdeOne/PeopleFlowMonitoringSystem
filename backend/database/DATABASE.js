@@ -5,7 +5,7 @@
  */
 
 'use strict';
-const config = require('./configurationFile');
+const config = require('../config/CONFIGURATION');
 const mysql = require('mysql');
 const util = require("util");
 
@@ -48,7 +48,7 @@ let mysqlDB = class DataBaseClass{
      */
     CREATE_NODES_INFORMATIONS      = `CREATE TABLE IF NOT EXISTS ${config.NODES_INFORMATIONS}(
                                         NODE_NAME VARCHAR(255) NOT NULL , MAC VARCHAR(255) NOT NULL ,
-                                        LOCATION VARCHAR(255) NOT NULL , ACTIVE TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP )`;
+                                        LOCATION VARCHAR(255) NOT NULL )`;
     /**
      * Query for creating the the table
      * to store known macs and associated names.
@@ -99,7 +99,7 @@ let mysqlDB = class DataBaseClass{
      *
      * @returns a query function that return a promise.
      */
-    queryDataBase(){
+    createQuery(){
         const dbCon = mysql.createConnection({
 
             host:     config.HOST,
@@ -117,6 +117,31 @@ let mysqlDB = class DataBaseClass{
                 return util.promisify( dbCon.end ).call( dbCon );
             }
         };
+    }
+
+    async queryDatabase(query){
+
+        const db = this.createQuery();
+        try {
+            return  await db.query(query);
+        } catch (err) {
+            console.log(new Error(err.message));
+        } finally {
+            await db.close();
+        }
+
+    }
+
+    async queryDatabase(query,elements){
+
+        const db = this.createQuery();
+        try {
+            return  await db.query(query,elements);
+        } catch (err) {
+            console.log(new Error(err.message));
+        } finally {
+            await db.close();
+        }
     }
 
     /**
@@ -168,7 +193,7 @@ let mysqlDB = class DataBaseClass{
      * @param tableName
      */
    async createTables(query,tableName) {
-        let queryDB = this.queryDataBase();
+        let queryDB = this.createQuery();
         await queryDB
             .query(query)
             .then(queryDB.close())
