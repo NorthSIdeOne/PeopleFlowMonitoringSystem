@@ -72,27 +72,66 @@ let processData = class ProcessDataClass{
      }
 
 
+    /**
+     * Query to get data from the database where the
+     * RSSI > trash hold and from the last 'GET_DATA_INTERVAL'
+     * minutes orderd by the time DESC.
+     *
+     * @ GET_UNPROCCESED_DAT {string}
+     */
      GET_UNPROCCESED_DATA  = `SELECT * FROM ${config.COLLECTED_DATA_SNIFFERS} 
                              WHERE RSSI > ${config.MAX_RSSI} AND
                              TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )  
                              ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC`;
 
+    /**
+     * Query for selectic distinc macs from the database
+     * where the RSSI > trash hold and from the last
+     * 'GET_DATA_INTERVAL' minutes orderd by the time DESC.
+     *
+     * @GET_DISTINCT_MACS {string}
+     */
      GET_DISTINCT_MACS     = `SELECT DISTINCT MAC FROM ${config.COLLECTED_DATA_SNIFFERS} 
                              WHERE RSSI > ${config.MAX_RSSI} AND
                              TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )  
                              ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC`;
-     GET_NODE_INFORMATIONS = `SELECT * FROM ${config.NODES_INFORMATIONS}`;
 
-     GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
+    /**
+     * Query to get all nodes information from the databse
+     * | MAC | NAME | TIME |
+     *
+     * @GET_NODE_INFORMATIONS {string}
+     */
+    GET_NODE_INFORMATIONS = `SELECT * FROM ${config.NODES_INFORMATIONS}`;
 
+    /**
+     * Query to get all the know MACS from the
+     * database.
+     *
+     * @GET_KNOW_MAC {string}
+     */
+
+    GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
+
+    /**
+     * Query to insert proccessed data into the database
+     * @config.PROCESSED_DATA {The table in which proccessed data is inserted}
+     */
     INSERT_PROCCESSED_DATA = `INSERT INTO ${config.PROCESSED_DATA} (PERSON_NAME,LOCATION,MAC,RSSI,SSID,LAST_ACTIVE) VALUES (?,?,?,?,?,?)`;
+
+    /**
+     * Query to insert nr of people into the database
+     *
+     * @config.PEOPLE_FLOW {The table in which nr of people  is inserted}
+     */
     INSERT_NR_OF_PEOPLE = `INSERT INTO ${config.PEOPLE_FLOW} (ROOM,NR_OF_PEOPLE) VALUES (?,?)`;
+
 
     /**
      * Used to extract data from the database
      * and to return it in JSON format
      *
-     * @param query: A query to select data from the database
+     * @param query A query to select data from the database
      * @returns Data in JSON format
      */
     async extractData(query){
@@ -101,6 +140,12 @@ let processData = class ProcessDataClass{
      }
 
 
+    /**
+     * Get from the database all the needed data:
+     * | Unproccessed data | Distinct macs | information about nodes | known MACs|
+     *
+     * @returns {Promise<void>}
+     */
     async collectData(){
 
          this.unprocessedData   =  await this.extractData(this.GET_UNPROCCESED_DATA);
@@ -111,6 +156,14 @@ let processData = class ProcessDataClass{
      }
 
 
+    /**
+     * Proccess data.It call the collectData() to get
+     * all the needed data and proccess it using formatData()
+     * and estimate the nr of people in each room by calling
+     * estimateNrOfPeople()
+     *
+     * @returns {Promise<{LAST_ACTIVE: *[], USER: *[], ROOM: *[], RSSI_AVERAGE: *[], SSID: *[], MAC: *[]}>}
+     */
     async processData(){
         await this.collectData();
         this.processedData = await this.formatData(this.unprocessedData,this.nodesInformations,this.distinctMAC,this.knownMAC);
@@ -122,6 +175,15 @@ let processData = class ProcessDataClass{
     }
 
 
+    /**
+     * Estimate the nr of people in each existing location.
+     * The location is given by the node locations.
+     *
+     * @param proccesedData: A JSON object that contains proccessed data
+     * @param nodesInformations: A JSON object that contains information about nodes
+     * @returns The nrOfPeople with the following format:
+     *           |LOCATION | NR_NR_OF_PEOPLE | TIME |
+     */
     async estimateNrOfPeople(proccesedData,nodesInformations){
 
         let numberOfPeople = this.roomDistribution(nodesInformations);
@@ -136,6 +198,14 @@ let processData = class ProcessDataClass{
         return numberOfPeople;
     }
 
+    /**
+     * Return an array with all locations and
+     * with the number of people on each room but
+     * default is 0.It basically return a template.
+     *
+     * @param nodesInformations:A JSON object that contains information about nodes
+     * @returns Template for number of people in each room
+     */
     roomDistribution(nodesInformations){
         let localRoomDistribution = [];
 
@@ -150,6 +220,13 @@ let processData = class ProcessDataClass{
         return localRoomDistribution;
 
     }
+
+    /**
+     * Insert the proccessed data into the database
+     *
+     * @param processedData: A JSON object that contains proccessed data
+     * @returns {Promise<void>}
+     */
    async insertProccessedData(processedData){
 
         const db = (new dbCon).createQuery();
@@ -167,6 +244,12 @@ let processData = class ProcessDataClass{
         }
     }
 
+    /**
+     * Insert the numberOfPeople into the database
+     *
+     * @param numberOfPeople: A JSON object that contains information about nodes
+     * @returns {Promise<void>}
+     */
     async insertNumberOfPeople(numberOfPeople){
 
         const db = (new dbCon).createQuery();
@@ -182,6 +265,16 @@ let processData = class ProcessDataClass{
 
         }
     }
+
+    /**
+     * Clear the records from the unproccesedData that
+     * contains the same macs as nodeInformations which
+     * are the macs of the nodes.
+     *
+     * @param unproccesedData:A JSON object that contains unproccessed data
+     * @param nodeInformations:A JSON object that contains information about nodes
+     * @returns Filtered data
+     */
     filterMAC(unproccesedData,nodeInformations){
         let blacklist = []
         let filteredData = []
@@ -199,6 +292,20 @@ let processData = class ProcessDataClass{
 
     }
 
+    /**
+     * Format the unproccesed data so,the formated data
+     * have just unique MACs with an average RSSI ,
+     * with the connected SSID , locationa ,person name
+     * and the last time active.The returned data will have
+     * the following foramt:
+     * |PERSON NAME | LOCATION | MAC | RSSI | SSID | LAST ACTIVE |
+     *
+     * @param unproccesedData : A JSON object that contains unproccessed data
+     * @param nodeInformations :A JSON object that contains information about nodes
+     * @param distinctMAC: A JSON object that contains al distinct macs
+     * @param knownMAC: A JSON object that contains all known macs
+     * @returns {Promise<[]>}
+     */
     async formatData(unproccesedData,nodeInformations,distinctMAC,knownMAC){
         let filteredData =  this.filterMAC(unproccesedData,nodeInformations);
         let localProccessedData = [];
@@ -243,12 +350,26 @@ let processData = class ProcessDataClass{
         return localProccessedData;
     }
 
+    /**
+     * Get the location based on node name
+     *
+     * @param nodeName: Name of the node
+     * @param nodeInformations: A JSON object that contains information about nodes
+     * @returns Location{string}
+     */
     getLocation(nodeName,nodeInformations){
         let location = ""
         nodeInformations.forEach(element => ((element.NODE_NAME === nodeName) && location === "") ? location=element.LOCATION : false);
         return location;
     }
 
+    /**
+     * Get the person name  based on the MAC address
+     *
+     * @param mac: target mac
+     * @param knownMAC: A JSON object that contains all known macs
+     * @returns PersonName{string}
+     */
     getPersonName(mac,knownMAC){
         let personName = "Unknown";
         knownMAC.forEach(elemement => ((elemement.MAC === mac) && personName === "Unknown") ? personName = elemement.PERSON_NAME : false);
