@@ -113,6 +113,7 @@ let processData = class ProcessDataClass{
 
     GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
 
+    GET_BLACKLIST_SSID    =  `SELECT * FROM ${config.BLACKLIST}`;
     /**
      * Query to insert proccessed data into the database
      * @config.PROCESSED_DATA {The table in which proccessed data is inserted}
@@ -125,6 +126,7 @@ let processData = class ProcessDataClass{
      * @config.PEOPLE_FLOW {The table in which nr of people  is inserted}
      */
     INSERT_NR_OF_PEOPLE = `INSERT INTO ${config.PEOPLE_FLOW} (ROOM,NR_OF_PEOPLE) VALUES (?,?)`;
+
 
 
     /**
@@ -166,15 +168,89 @@ let processData = class ProcessDataClass{
      */
     async processData(){
         await this.collectData();
-        this.processedData = await this.formatData(this.unprocessedData,this.nodesInformations,this.distinctMAC,this.knownMAC);
-        this.insertProccessedData(this.processedData)
+
+
+        this.processedData = await this.formatData( this.nearestNodeFilter(this.unprocessedData,this.nodesInformations,this.distinctMAC)
+                                                    ,this.nodesInformations,this.distinctMAC,this.knownMAC)
+        await this.insertProccessedData(this.processedData);
 
         this.numberOfPeople = await this.estimateNrOfPeople(this.processedData,this.nodesInformations);
-        this.insertNumberOfPeople(this.numberOfPeople)
-        return this.processedData;
+        await this.insertNumberOfPeople(this.numberOfPeople)
+        console.log( this.processedData)
+        console.log( this.numberOfPeople)
     }
 
+    nearestNodeFilter(unprocessedData,nodesInformations,distinctMAC){
 
+        let filteredData = [];
+        for(var index1 = 0 ;index1 < distinctMAC.length ;index1++){
+
+            let macNodeName = this.filterNodeName(distinctMAC[index1].MAC,unprocessedData,nodesInformations);
+            for(var index2 = 0;index2 < unprocessedData.length;index2++){
+                if(unprocessedData[index2].MAC === macNodeName.MAC && unprocessedData[index2].NODE_NAME === macNodeName.NODE_NAME)
+                    filteredData.push(unprocessedData[index2])
+            }
+        }
+
+        return filteredData;
+    }
+    filterNodeName(mac,unprocessedData,nodesInformations){
+        let macFilterStructure = [];
+
+
+        for(var index1 = 0 ;index1 < nodesInformations.length ;index1++){
+            let rssi = 0;
+            let nr   = 0;
+            for(var index2  = 0 ; index2 < unprocessedData.length ;index2++){
+
+                if(mac === unprocessedData[index2].MAC){
+                    if(unprocessedData[index2].NODE_NAME === nodesInformations[index1].NODE_NAME) {
+                        rssi += unprocessedData[index2].RSSI;
+                        nr+=1;
+                    }
+                }
+            }
+            if(nr !== 0)
+            {
+                macFilterStructure.push({
+                    "MAC"       : mac,
+                    "NODE_NAME" : nodesInformations[index1].NODE_NAME,
+                    "RSSI"      : (rssi/nr),
+                })
+            }
+        }
+
+        return this.getMax(macFilterStructure);
+
+    }
+
+    getMax(macFilterStructure){
+
+        var max = {
+            "VALUE" : null,
+            "INDEX" : 0
+        };
+
+        if(macFilterStructure.length === 0)
+            return macFilterStructure
+
+        else {
+            max.VALUE = parseInt(macFilterStructure[0].RSSI)
+            max.INDEX = 0;
+        }
+
+
+        for(var index1 = 0 ;index1 < macFilterStructure.length;index1++){
+
+            if(parseInt(macFilterStructure[index1].RSSI) > parseInt(max.VALUE) )
+            {
+                max.VALUE = macFilterStructure.RSSI;
+                max.INDEX = index1;
+            }
+        }
+
+        return macFilterStructure[max.INDEX];
+    }
     /**
      * Estimate the nr of people in each existing location.
      * The location is given by the node locations.
@@ -275,19 +351,41 @@ let processData = class ProcessDataClass{
      * @param nodeInformations:A JSON object that contains information about nodes
      * @returns Filtered data
      */
-    filterMAC(unproccesedData,nodeInformations){
-        let blacklist = []
-        let filteredData = []
+   async filterMAC(unproccesedData,nodeInformations){
+        let blacklistMAC = [];
+        let filteredData = [];
+        let blacklistSSID = await this.extractData(this.GET_BLACKLIST_SSID);
+        let checkMAC;
+        let checkSSID;
 
-        nodeInformations.forEach(element => blacklist.push(element.MAC));
+        nodeInformations.forEach(element => blacklistMAC.push({
+            "MAC" : element.MAC
+        }));
+
         for(var index1 = 0 ; index1 < unproccesedData.length ; index1 ++ )
         {
-            for(var index2 =0 ; index2 < blacklist.length;  index2++)
+            checkMAC  = false;
+            checkSSID = false;
+            for(var index2 =0 ; index2 < blacklistMAC.length;  index2++)
             {
-                (unproccesedData[index1].MAC === blacklist[index2]) ? index2 = blacklist.length : filteredData.push(unproccesedData[index1]);
-            }
-        }
+                if(unproccesedData[index1].MAC === blacklistMAC[index2].MAC) {
+                    checkMAC = true;
+                    index2 = blacklistMAC.length;
+                }
 
+            }
+            if(checkMAC === false){
+                for(var index3 = 0 ;index3 < blacklistSSID.length; index3++){
+                    if(unproccesedData[index1].SSID === blacklistSSID[index3].SSID) {
+                        checkSSID = true;
+                        index3 = blacklistSSID.length;
+                    }
+                }
+                if(checkSSID === false)
+                    filteredData.push(unproccesedData[index1])
+            }
+
+        }
         return  filteredData;
 
     }
@@ -307,10 +405,12 @@ let processData = class ProcessDataClass{
      * @returns {Promise<[]>}
      */
     async formatData(unproccesedData,nodeInformations,distinctMAC,knownMAC){
-        let filteredData =  this.filterMAC(unproccesedData,nodeInformations);
+        let filteredData =   await  this.filterMAC(unproccesedData,nodeInformations);
+        let filteredDistinctMAC   = await this.filterMAC(distinctMAC,nodeInformations);
         let localProccessedData = [];
 
-        for(var index1 = 0; index1 < distinctMAC.length ;index1++)
+
+        for(var index1 = 0; index1 < filteredDistinctMAC.length ;index1++)
         {
             let mac = ""
             let rssi = 0;
@@ -322,20 +422,21 @@ let processData = class ProcessDataClass{
 
             for(var index2 = 0; index2 < filteredData.length ;index2++)
             {
-                if(distinctMAC[index1].MAC === filteredData[index2].MAC){
+                if(filteredDistinctMAC[index1].MAC === filteredData[index2].MAC){
                     rssi += filteredData[index2].RSSI;
                     nrOfRecords+=1;
                     if(mac === "")
-                        mac = filteredData[index2].MAC;
+                        mac = filteredDistinctMAC[index1].MAC;
                     if(filteredData[index2] !== "")
                         ssid = filteredData[index2].SSID;
-                    if(lastTimeActive === "" || lastTimeActive < filteredData[index2].TIME)
+                    if(lastTimeActive === "" || Date(lastTimeActive) < Date(filteredData[index2].TIME)) {
                         lastTimeActive = filteredData[index2].TIME;
+                    }
                     if(nodeName === "")
                         nodeName = filteredData[index2].NODE_NAME;
                 }
-            }
 
+            }
 
             localProccessedData.push({
                     "PERSON_NAME"  : this.getPersonName(mac,knownMAC),
@@ -346,7 +447,6 @@ let processData = class ProcessDataClass{
                     "LAST_ACTIVE"  : lastTimeActive
             })
         }
-
         return localProccessedData;
     }
 
@@ -378,5 +478,6 @@ let processData = class ProcessDataClass{
 
 }
 
-let t = (new processData());
+let t= new processData()
 t.processData();
+module.exports = processData;
