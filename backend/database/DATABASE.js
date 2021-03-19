@@ -90,7 +90,7 @@ let mysqlDB = class DataBaseClass{
                                         CHANNEL_HOPPING INT(255) NOT NULL)`;
 
 
-    CREATE_BLACKLIST               = `CREATE TABLE IF NOT EXISTS ${config.BLACKLIST}(
+    CREATE_BLACKLIST                  = `CREATE TABLE IF NOT EXISTS ${config.BLACKLIST}(
                                         SSID VARCHAR(255) NOT NULL)`;
 
     /**
@@ -211,6 +211,7 @@ let mysqlDB = class DataBaseClass{
      */
     async init(){
         try{
+
             await this.creatDataBase(this.CREATE_DATABASE);
             await this.createTables(this.CREATE_COLLECTED_DATA_SNIFFERS,config.COLLECTED_DATA_SNIFFERS);
             await this.createTables(this.CREATE_NODES_INFORMATIONS,config.NODES_INFORMATIONS);

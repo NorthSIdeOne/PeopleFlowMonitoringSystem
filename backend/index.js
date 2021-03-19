@@ -15,6 +15,8 @@ app.use('/api/sensor_data',iotDevice);
 
 app.get('/', (req, res) => {
     res.send("Hello World");
+    var date =  new Date(Date.now() + (2*60*60*1000));
+    console.log("[GET]: Home  ["+date.toUTCString()+"]")
   });
 
 

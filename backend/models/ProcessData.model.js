@@ -23,7 +23,7 @@ let processData = class ProcessDataClass{
     /**
      * Data after the alghoritm is used to proccess the data
      *
-     * @type {{LAST_ACTIVE: [], USER: [], ROOM: [], RSSI_AVERAGE: [], SSID: [], MAC: []}}
+     * @type {*[]}
      */
     processedData = {
         "PERSON_NAME"  : [],
@@ -91,10 +91,14 @@ let processData = class ProcessDataClass{
      *
      * @GET_DISTINCT_MACS {string}
      */
-     GET_DISTINCT_MACS     = `SELECT DISTINCT MAC FROM ${config.COLLECTED_DATA_SNIFFERS} 
-                             WHERE RSSI > ${config.MAX_RSSI} AND
-                             TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )  
-                             ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC`;
+     GET_DISTINCT_MACS     = `SELECT DISTINCT RESULT.MAC 
+                             FROM (SELECT * FROM ${config.COLLECTED_DATA_SNIFFERS} 
+                             WHERE TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )
+                             ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC) 
+                             AS RESULT 
+                             WHERE RESULT.RSSI > ${config.MAX_RSSI}
+                             GROUP BY RESULT.MAC
+                             HAVING COUNT(RESULT.MAC) >= ${config.MIN_NR_OF_MACS} `;
 
     /**
      * Query to get all nodes information from the databse
@@ -118,7 +122,7 @@ let processData = class ProcessDataClass{
      * Query to insert proccessed data into the database
      * @config.PROCESSED_DATA {The table in which proccessed data is inserted}
      */
-    INSERT_PROCCESSED_DATA = `INSERT INTO ${config.PROCESSED_DATA} (PERSON_NAME,LOCATION,MAC,RSSI,SSID,LAST_ACTIVE) VALUES (?,?,?,?,?,?)`;
+    INSERT_PROCCESSED_DATA = `INSERT INTO ${config.PROCESSED_DATA} (PERSON_NAME,LOCATION,MAC,RSSI,SSID) VALUES (?,?,?,?,?)`;
 
     /**
      * Query to insert nr of people into the database
@@ -148,6 +152,10 @@ let processData = class ProcessDataClass{
      *
      * @returns {Promise<void>}
      */
+
+
+
+
     async collectData(){
 
          this.unprocessedData   =  await this.extractData(this.GET_UNPROCCESED_DATA);
@@ -169,8 +177,7 @@ let processData = class ProcessDataClass{
     async processData(){
         await this.collectData();
 
-
-        this.processedData = await this.formatData( this.nearestNodeFilter(this.unprocessedData,this.nodesInformations,this.distinctMAC)
+        this.processedData = await this.formatData(this.nearestNodeFilter(this.unprocessedData,this.nodesInformations,this.distinctMAC)
                                                     ,this.nodesInformations,this.distinctMAC,this.knownMAC)
         await this.insertProccessedData(this.processedData);
 
@@ -180,6 +187,15 @@ let processData = class ProcessDataClass{
         console.log( this.numberOfPeople)
     }
 
+    /**
+     * From the unproccessed data select for each MAC
+     * what is the dominant node for unproccesed data
+     *
+     * @param unprocessedData: A JSON object that contains data collected by nodes
+     * @param nodesInformations:A JSON object that contains information aboub nodes
+     * @param distinctMAC: A list of distinct macs
+     * @returns A JSON object that contains filtered data
+     */
     nearestNodeFilter(unprocessedData,nodesInformations,distinctMAC){
 
         let filteredData = [];
@@ -194,6 +210,18 @@ let processData = class ProcessDataClass{
 
         return filteredData;
     }
+
+    /**
+     * Create an array of JSONs with the target MAC ,
+     * with every node name that is associated with that mac
+     * an with an avarage RSSI for each node and return the dominant
+     * node based on the strongest RSSI signal
+     *
+     * @param mac: A MAC
+     * @param unprocessedData: A JSON object that contains data collected by nodes
+     * @param nodesInformations:A JSON object that contains information aboub nodes
+     * @returns {*}
+     */
     filterNodeName(mac,unprocessedData,nodesInformations){
         let macFilterStructure = [];
 
@@ -224,6 +252,13 @@ let processData = class ProcessDataClass{
 
     }
 
+    /**
+     * Return a structure that contain the most dominant
+     * Node name with a MAC and an average RSSI
+     *
+     * @param macFilterStructure: An array of JSONs that contain MAC,Node Name and RSSI
+     * @returns A JSON with the max value based on RSSI
+     */
     getMax(macFilterStructure){
 
         var max = {
@@ -309,13 +344,17 @@ let processData = class ProcessDataClass{
         try {
             for(let element of  processedData)
                   await db.query( this.INSERT_PROCCESSED_DATA,
-                      [element.PERSON_NAME,element.LOCATION,element.MAC,element.RSSI,element.SSID,element.LAST_ACTIVE]);
+                      [element.PERSON_NAME,element.LOCATION,element.MAC
+                          ,element.RSSI,element.SSID]);
 
         } catch (err) {
             console.log(new Error(err.message));
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert proccessed data FAILED  ["+date.toUTCString()+"]")
         } finally {
             await db.close();
-            console.log("Process data insert successfully!");
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert proccessed data SUCCESS  ["+date.toUTCString()+"]")
 
         }
     }
@@ -335,9 +374,12 @@ let processData = class ProcessDataClass{
 
         } catch (err) {
             console.log(new Error(err.message));
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert nr of people FAIL  ["+date.toUTCString()+"]")
         } finally {
             await db.close();
-            console.log("Nr of people data insert successfully!");
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert nr of people SUCCESS  ["+date.toUTCString()+"]")
 
         }
     }
@@ -438,6 +480,7 @@ let processData = class ProcessDataClass{
 
             }
 
+            if(rssi !== 0 )
             localProccessedData.push({
                     "PERSON_NAME"  : this.getPersonName(mac,knownMAC),
                     "LOCATION"     : this.getLocation(nodeName,nodeInformations),
@@ -478,6 +521,5 @@ let processData = class ProcessDataClass{
 
 }
 
-let t= new processData()
-t.processData();
+
 module.exports = processData;
