@@ -302,7 +302,7 @@ let processData = class ProcessDataClass{
         {
             for(let j in numberOfPeople){
                 if(proccesedData[i].LOCATION === numberOfPeople[j].LOCATION)
-                    numberOfPeople[j].NR_OF_PEOPLE +=1;
+                    numberOfPeople[j].NR_OF_PEOPLE += 1;
             }
         }
 
