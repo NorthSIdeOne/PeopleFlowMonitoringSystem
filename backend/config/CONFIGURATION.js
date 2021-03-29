@@ -3,6 +3,7 @@
  * and it is used as configuration file.
  */
 
+
 module.exports = {
 
 // Database
@@ -16,11 +17,11 @@ KNOWN_MAC:"KNOWN_MAC",
 PROCESSED_DATA:"PROCESSED_DATA",
 PEOPLE_FLOW:"PEOPLE_FLOW",
 NODES_CONFIGURATION: "NODES_CONFIGURATION",
-
+BLACKLIST: "BLACKLIST",
 
 //ALGORITHM
-
 MAX_RSSI  : -75,
-GET_DATA_INTERVAL : 10
-
+GET_DATA_INTERVAL :15,
+    MIN_NR_OF_MACS: 4
 }
+
