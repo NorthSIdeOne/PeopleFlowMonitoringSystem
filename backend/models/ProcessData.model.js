@@ -23,7 +23,7 @@ let processData = class ProcessDataClass{
     /**
      * Data after the alghoritm is used to proccess the data
      *
-     * @type {{LAST_ACTIVE: [], USER: [], ROOM: [], RSSI_AVERAGE: [], SSID: [], MAC: []}}
+     * @type {*[]}
      */
     processedData = {
         "PERSON_NAME"  : [],
@@ -91,10 +91,14 @@ let processData = class ProcessDataClass{
      *
      * @GET_DISTINCT_MACS {string}
      */
-     GET_DISTINCT_MACS     = `SELECT DISTINCT MAC FROM ${config.COLLECTED_DATA_SNIFFERS} 
-                             WHERE RSSI > ${config.MAX_RSSI} AND
-                             TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )  
-                             ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC`;
+     GET_DISTINCT_MACS     = `SELECT DISTINCT RESULT.MAC 
+                             FROM (SELECT * FROM ${config.COLLECTED_DATA_SNIFFERS} 
+                             WHERE TIME >= ( NOW() - INTERVAL ${config.GET_DATA_INTERVAL} MINUTE )
+                             ORDER BY ${config.COLLECTED_DATA_SNIFFERS}.TIME  DESC) 
+                             AS RESULT 
+                             WHERE RESULT.RSSI > ${config.MAX_RSSI}
+                             GROUP BY RESULT.MAC
+                             HAVING COUNT(RESULT.MAC) >= ${config.MIN_NR_OF_MACS} `;
 
     /**
      * Query to get all nodes information from the databse
@@ -113,11 +117,12 @@ let processData = class ProcessDataClass{
 
     GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
 
+    GET_BLACKLIST_SSID    =  `SELECT * FROM ${config.BLACKLIST}`;
     /**
      * Query to insert proccessed data into the database
      * @config.PROCESSED_DATA {The table in which proccessed data is inserted}
      */
-    INSERT_PROCCESSED_DATA = `INSERT INTO ${config.PROCESSED_DATA} (PERSON_NAME,LOCATION,MAC,RSSI,SSID,LAST_ACTIVE) VALUES (?,?,?,?,?,?)`;
+    INSERT_PROCCESSED_DATA = `INSERT INTO ${config.PROCESSED_DATA} (PERSON_NAME,LOCATION,MAC,RSSI,SSID) VALUES (?,?,?,?,?)`;
 
     /**
      * Query to insert nr of people into the database
@@ -125,6 +130,7 @@ let processData = class ProcessDataClass{
      * @config.PEOPLE_FLOW {The table in which nr of people  is inserted}
      */
     INSERT_NR_OF_PEOPLE = `INSERT INTO ${config.PEOPLE_FLOW} (ROOM,NR_OF_PEOPLE) VALUES (?,?)`;
+
 
 
     /**
@@ -146,6 +152,10 @@ let processData = class ProcessDataClass{
      *
      * @returns {Promise<void>}
      */
+
+
+
+
     async collectData(){
 
          this.unprocessedData   =  await this.extractData(this.GET_UNPROCCESED_DATA);
@@ -166,15 +176,116 @@ let processData = class ProcessDataClass{
      */
     async processData(){
         await this.collectData();
-        this.processedData = await this.formatData(this.unprocessedData,this.nodesInformations,this.distinctMAC,this.knownMAC);
-        this.insertProccessedData(this.processedData)
+
+        this.processedData = await this.formatData(this.nearestNodeFilter(this.unprocessedData,this.nodesInformations,this.distinctMAC)
+                                                    ,this.nodesInformations,this.distinctMAC,this.knownMAC)
+        await this.insertProccessedData(this.processedData);
 
         this.numberOfPeople = await this.estimateNrOfPeople(this.processedData,this.nodesInformations);
-        this.insertNumberOfPeople(this.numberOfPeople)
-        return this.processedData;
+        await this.insertNumberOfPeople(this.numberOfPeople)
+        console.log( this.processedData)
+        console.log( this.numberOfPeople)
     }
 
+    /**
+     * From the unproccessed data select for each MAC
+     * what is the dominant node for unproccesed data
+     *
+     * @param unprocessedData: A JSON object that contains data collected by nodes
+     * @param nodesInformations:A JSON object that contains information aboub nodes
+     * @param distinctMAC: A list of distinct macs
+     * @returns A JSON object that contains filtered data
+     */
+    nearestNodeFilter(unprocessedData,nodesInformations,distinctMAC){
 
+        let filteredData = [];
+        for(var index1 = 0 ;index1 < distinctMAC.length ;index1++){
+
+            let macNodeName = this.filterNodeName(distinctMAC[index1].MAC,unprocessedData,nodesInformations);
+            for(var index2 = 0;index2 < unprocessedData.length;index2++){
+                if(unprocessedData[index2].MAC === macNodeName.MAC && unprocessedData[index2].NODE_NAME === macNodeName.NODE_NAME)
+                    filteredData.push(unprocessedData[index2])
+            }
+        }
+
+        return filteredData;
+    }
+
+    /**
+     * Create an array of JSONs with the target MAC ,
+     * with every node name that is associated with that mac
+     * an with an avarage RSSI for each node and return the dominant
+     * node based on the strongest RSSI signal
+     *
+     * @param mac: A MAC
+     * @param unprocessedData: A JSON object that contains data collected by nodes
+     * @param nodesInformations:A JSON object that contains information aboub nodes
+     * @returns {*}
+     */
+    filterNodeName(mac,unprocessedData,nodesInformations){
+        let macFilterStructure = [];
+
+
+        for(var index1 = 0 ;index1 < nodesInformations.length ;index1++){
+            let rssi = 0;
+            let nr   = 0;
+            for(var index2  = 0 ; index2 < unprocessedData.length ;index2++){
+
+                if(mac === unprocessedData[index2].MAC){
+                    if(unprocessedData[index2].NODE_NAME === nodesInformations[index1].NODE_NAME) {
+                        rssi += unprocessedData[index2].RSSI;
+                        nr+=1;
+                    }
+                }
+            }
+            if(nr !== 0)
+            {
+                macFilterStructure.push({
+                    "MAC"       : mac,
+                    "NODE_NAME" : nodesInformations[index1].NODE_NAME,
+                    "RSSI"      : (rssi/nr),
+                })
+            }
+        }
+
+        return this.getMax(macFilterStructure);
+
+    }
+
+    /**
+     * Return a structure that contain the most dominant
+     * Node name with a MAC and an average RSSI
+     *
+     * @param macFilterStructure: An array of JSONs that contain MAC,Node Name and RSSI
+     * @returns A JSON with the max value based on RSSI
+     */
+    getMax(macFilterStructure){
+
+        var max = {
+            "VALUE" : null,
+            "INDEX" : 0
+        };
+
+        if(macFilterStructure.length === 0)
+            return macFilterStructure
+
+        else {
+            max.VALUE = parseInt(macFilterStructure[0].RSSI)
+            max.INDEX = 0;
+        }
+
+
+        for(var index1 = 0 ;index1 < macFilterStructure.length;index1++){
+
+            if(parseInt(macFilterStructure[index1].RSSI) > parseInt(max.VALUE) )
+            {
+                max.VALUE = macFilterStructure.RSSI;
+                max.INDEX = index1;
+            }
+        }
+
+        return macFilterStructure[max.INDEX];
+    }
     /**
      * Estimate the nr of people in each existing location.
      * The location is given by the node locations.
@@ -191,7 +302,7 @@ let processData = class ProcessDataClass{
         {
             for(let j in numberOfPeople){
                 if(proccesedData[i].LOCATION === numberOfPeople[j].LOCATION)
-                    numberOfPeople[j].NR_OF_PEOPLE +=1;
+                    numberOfPeople[j].NR_OF_PEOPLE += 1;
             }
         }
 
@@ -233,13 +344,17 @@ let processData = class ProcessDataClass{
         try {
             for(let element of  processedData)
                   await db.query( this.INSERT_PROCCESSED_DATA,
-                      [element.PERSON_NAME,element.LOCATION,element.MAC,element.RSSI,element.SSID,element.LAST_ACTIVE]);
+                      [element.PERSON_NAME,element.LOCATION,element.MAC
+                          ,element.RSSI,element.SSID]);
 
         } catch (err) {
             console.log(new Error(err.message));
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert proccessed data FAILED  ["+date.toUTCString()+"]")
         } finally {
             await db.close();
-            console.log("Process data insert successfully!");
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert proccessed data SUCCESS  ["+date.toUTCString()+"]")
 
         }
     }
@@ -259,9 +374,12 @@ let processData = class ProcessDataClass{
 
         } catch (err) {
             console.log(new Error(err.message));
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert nr of people FAIL  ["+date.toUTCString()+"]")
         } finally {
             await db.close();
-            console.log("Nr of people data insert successfully!");
+            var date =  new Date(Date.now() + (2*60*60*1000));
+            console.log("[DATABSE]: Insert nr of people SUCCESS  ["+date.toUTCString()+"]")
 
         }
     }
@@ -275,19 +393,41 @@ let processData = class ProcessDataClass{
      * @param nodeInformations:A JSON object that contains information about nodes
      * @returns Filtered data
      */
-    filterMAC(unproccesedData,nodeInformations){
-        let blacklist = []
-        let filteredData = []
+   async filterMAC(unproccesedData,nodeInformations){
+        let blacklistMAC = [];
+        let filteredData = [];
+        let blacklistSSID = await this.extractData(this.GET_BLACKLIST_SSID);
+        let checkMAC;
+        let checkSSID;
 
-        nodeInformations.forEach(element => blacklist.push(element.MAC));
+        nodeInformations.forEach(element => blacklistMAC.push({
+            "MAC" : element.MAC
+        }));
+
         for(var index1 = 0 ; index1 < unproccesedData.length ; index1 ++ )
         {
-            for(var index2 =0 ; index2 < blacklist.length;  index2++)
+            checkMAC  = false;
+            checkSSID = false;
+            for(var index2 =0 ; index2 < blacklistMAC.length;  index2++)
             {
-                (unproccesedData[index1].MAC === blacklist[index2]) ? index2 = blacklist.length : filteredData.push(unproccesedData[index1]);
-            }
-        }
+                if(unproccesedData[index1].MAC === blacklistMAC[index2].MAC) {
+                    checkMAC = true;
+                    index2 = blacklistMAC.length;
+                }
 
+            }
+            if(checkMAC === false){
+                for(var index3 = 0 ;index3 < blacklistSSID.length; index3++){
+                    if(unproccesedData[index1].SSID === blacklistSSID[index3].SSID) {
+                        checkSSID = true;
+                        index3 = blacklistSSID.length;
+                    }
+                }
+                if(checkSSID === false)
+                    filteredData.push(unproccesedData[index1])
+            }
+
+        }
         return  filteredData;
 
     }
@@ -307,10 +447,12 @@ let processData = class ProcessDataClass{
      * @returns {Promise<[]>}
      */
     async formatData(unproccesedData,nodeInformations,distinctMAC,knownMAC){
-        let filteredData =  this.filterMAC(unproccesedData,nodeInformations);
+        let filteredData =   await  this.filterMAC(unproccesedData,nodeInformations);
+        let filteredDistinctMAC   = await this.filterMAC(distinctMAC,nodeInformations);
         let localProccessedData = [];
 
-        for(var index1 = 0; index1 < distinctMAC.length ;index1++)
+
+        for(var index1 = 0; index1 < filteredDistinctMAC.length ;index1++)
         {
             let mac = ""
             let rssi = 0;
@@ -322,21 +464,23 @@ let processData = class ProcessDataClass{
 
             for(var index2 = 0; index2 < filteredData.length ;index2++)
             {
-                if(distinctMAC[index1].MAC === filteredData[index2].MAC){
+                if(filteredDistinctMAC[index1].MAC === filteredData[index2].MAC){
                     rssi += filteredData[index2].RSSI;
                     nrOfRecords+=1;
                     if(mac === "")
-                        mac = filteredData[index2].MAC;
+                        mac = filteredDistinctMAC[index1].MAC;
                     if(filteredData[index2] !== "")
                         ssid = filteredData[index2].SSID;
-                    if(lastTimeActive === "" || lastTimeActive < filteredData[index2].TIME)
+                    if(lastTimeActive === "" || Date(lastTimeActive) < Date(filteredData[index2].TIME)) {
                         lastTimeActive = filteredData[index2].TIME;
+                    }
                     if(nodeName === "")
                         nodeName = filteredData[index2].NODE_NAME;
                 }
+
             }
 
-
+            if(rssi !== 0 )
             localProccessedData.push({
                     "PERSON_NAME"  : this.getPersonName(mac,knownMAC),
                     "LOCATION"     : this.getLocation(nodeName,nodeInformations),
@@ -346,7 +490,6 @@ let processData = class ProcessDataClass{
                     "LAST_ACTIVE"  : lastTimeActive
             })
         }
-
         return localProccessedData;
     }
 
@@ -378,5 +521,5 @@ let processData = class ProcessDataClass{
 
 }
 
-let t = (new processData());
-t.processData();
+
+module.exports = processData;
