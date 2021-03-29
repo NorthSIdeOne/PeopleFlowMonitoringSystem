@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import ProceessDataTable from  '../views/ProceessDataTable.vue'
+import Graphs from  '../views/Graphs'
 
 Vue.use(VueRouter)
 
@@ -16,6 +17,12 @@ const routes = [
     path: '/processdata',
     name: 'ProceessDataTable',
     component: ProceessDataTable
+  },
+
+  {
+    path: '/graphs',
+    name: 'Graphs',
+    component: Graphs
   },
 
 ]
