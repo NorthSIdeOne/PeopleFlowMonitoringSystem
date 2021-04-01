@@ -16,7 +16,6 @@
 
     <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">
       <chart :name="rooms[index-1]"/>
-
     </v-col>
     <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">
       <chart :name="rooms[index]"/>
@@ -27,13 +26,8 @@
     </v-col>
 
   </v-row>
-
-<!--   <chart :labels="['31','42','3123']"  :data="getData" :name="'K'" :id="'K'"/>-->
-
  </div>
-<!--  <v-btn @click="this.test()">-->
-<!--    Click-->
-<!--  </v-btn>-->
+
 </div>
 
 
@@ -43,18 +37,12 @@
 
 <script>
 import  chart from '../components/ChartComponent'
-//import chart from '../components/ChartComponent'
-// import PlanetChart from '../components/NumberOfPeopleChart.vue'
-// import NrOfPeople from  '../components/DisplayNrOfPeople'
 import axios from "axios";
 const GET_ROOMS_URL = 'http://localhost:5000/api/people_flow/rooms';
 
 export default {
 
   components: {
-    // PlanetChart,
-    // NrOfPeople
-   // chart
     chart
   },
   data(){
@@ -81,7 +69,6 @@ export default {
   async mounted() {
 
     this.rooms = await this.getRooms();
-
   }
 }
 </script>
