@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const iotDevice = require('./routes/api/Node');
 const processData =  require('./routes/api/ProcessedData');
 const peopleFlow =  require('./routes/api/PeopleFlow');
+const nodeConfiguration = require('./routes/api/NodeConfigurations');
 const cors = require('cors');
 
 
@@ -17,6 +18,7 @@ app.use(cors());
 app.use('/api/sensor_data',iotDevice);
 app.use('/api/process_data',processData);
 app.use('/api/people_flow',peopleFlow);
+app.use('/api/node_configurations',nodeConfiguration);
 
 app.get('/', (req, res) => {
     res.send("Hello World");

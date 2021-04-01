@@ -8,20 +8,22 @@ module.exports = {
 
 // Database
 HOST     : "localhost",
-USER     :  "root",
-PASSWORD :  "",
+USER     :  "raspberrypi",
+PASSWORD :  "root",
 DATABASE :  "PEOPLE_FLOW_SYSTEM",
-COLLECTED_DATA_SNIFFERS: "COLLECTED_DATA_SNIFFERS",
-NODES_INFORMATIONS: "NODES_INFORMATIONS",
-KNOWN_MAC:"KNOWN_MAC",
-PROCESSED_DATA:"PROCESSED_DATA",
-PEOPLE_FLOW:"PEOPLE_FLOW",
-NODES_CONFIGURATION: "NODES_CONFIGURATION",
-BLACKLIST: "BLACKLIST",
+SERVER:"localhost",
+COLLECTED_DATA_SNIFFERS: "collected_data_sniffer",
+NODES_INFORMATIONS: "nodes_informations",
+KNOWN_MAC:"known_mac",
+PROCESSED_DATA:"processed_data",
+PEOPLE_FLOW:"people_flow",
+NODES_CONFIGURATION: "nodes_configuration",
+ALLOWLIST: "allowlist",
 
 //ALGORITHM
 MAX_RSSI  : -75,
 GET_DATA_INTERVAL :15,
     MIN_NR_OF_MACS: 4
 }
+
 

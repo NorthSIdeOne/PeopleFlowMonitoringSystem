@@ -45,4 +45,64 @@ exports.getRoomData =async function(room){
     return await (new dbCon).queryDatabase(GET_ROOM_DATA);
 }
 
+exports.getRoomDataForTimeFull = async function(room,date,time1,time2){
+
+    const GET_ROOM_DATA_BY_TIME = `SELECT *  FROM ${config.PEOPLE_FLOW} WHERE ROOM='${room}' AND
+                                    TIME >= '${date} ${time1}' AND TIME <= '${date} ${time2}'`;
+    return await (new dbCon).queryDatabase(GET_ROOM_DATA_BY_TIME);
+}
+
+exports.getRoomDataForSpecificDate = async function(room,date){
+
+    const GET_ROOM_DATA_BY_TIME = `SELECT *  FROM ${config.PEOPLE_FLOW} WHERE ROOM='${room}' AND
+                                    TIME  BETWEEN '${date} 00:00:00.00' AND '${date} 23:59:59.999'`;
+    return await (new dbCon).queryDatabase(GET_ROOM_DATA_BY_TIME);
+}
+
+
+exports.getNodeConfigurations = async function(){
+    const GET_NODES_INFORMATIONS = `SELECT *  FROM ${config.NODES_INFORMATIONS}`;
+    return await (new dbCon).queryDatabase(GET_NODES_INFORMATIONS);
+}
+
+exports.updateNodeConfiguration =async function(req,res){
+
+  const UPDATE_NODE_CONFIGURATION =`UPDATE ${config.NODES_INFORMATIONS} SET
+                                      NODE_NAME="${req.body['newData']['NODE_NAME']}",
+                                      MAC="${req.body['newData']['MAC']}",
+                                      LOCATION="${req.body['newData']['LOCATION']}",
+                                      SNIFFING_TIME="${req.body['newData']['SNIFFING_TIME']}",
+                                      CHANNEL_HOPPING="${req.body['newData']['CHANNEL_HOPPING']}"
+                                      WHERE NODE_NAME="${req.body['oldData']['NODE_NAME']}"AND
+                                      MAC="${req.body['oldData']['MAC']}" 
+                                      AND LOCATION="${req.body['oldData']['LOCATION']}"
+                                      AND SNIFFING_TIME="${req.body['oldData']['SNIFFING_TIME']}"
+                                      AND CHANNEL_HOPPING="${req.body['oldData']['CHANNEL_HOPPING']}"`
+    await (new dbCon).queryDatabase(UPDATE_NODE_CONFIGURATION);
+
+};
+
+exports.deleteNodeConfiguration =async function(req,res){
+
+    const DELETE_NODE_CONFIGURATION =`DELETE FROM ${config.NODES_INFORMATIONS} 
+                                      WHERE NODE_NAME="${req.body['data']['NODE_NAME']}"AND
+                                      MAC="${req.body['data']['MAC']}" 
+                                      AND LOCATION="${req.body['data']['LOCATION']}"
+                                      AND SNIFFING_TIME="${req.body['data']['SNIFFING_TIME']}"
+                                      AND CHANNEL_HOPPING="${req.body['data']['CHANNEL_HOPPING']}"`
+
+    await (new dbCon).queryDatabase(DELETE_NODE_CONFIGURATION);
+};
+
+
+exports.insertNodeConfiguration =async function(req,res){
+
+    const INSERT_NODE_CONFIGURATION =`INSERT INTO ${config.NODES_INFORMATIONS} (NODE_NAME,MAC,LOCATION,SNIFFING_TIME,CHANNEL_HOPPING) 
+                                     VALUES ("${req.body['data']['NODE_NAME']}","${req.body['data']['MAC']}","${req.body['data']['LOCATION']}","${req.body['data']['SNIFFING_TIME']}","${req.body['data']['CHANNEL_HOPPING']}")`;
+
+    console.log(INSERT_NODE_CONFIGURATION)
+    await (new dbCon).queryDatabase(INSERT_NODE_CONFIGURATION);
+};
+
+
 

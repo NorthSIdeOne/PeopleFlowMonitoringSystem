@@ -2,65 +2,50 @@
 
 
 <div>
-
   <div class="text-center mb-16 ">
      <h1>
        Rooms Occupation
      </h1>
+
   </div>
 
+ <div v-for="(item,index) in rooms.length" :key="item" >
 
- <div v-for="(item,index) in rooms.length" :key="item">
+<!--  <v-row >-->
 
-  <v-row >
-
-    <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">
-      <chart :name="rooms[index-1]"/>
-
-    </v-col>
-    <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">
-      <chart :name="rooms[index]"/>
-    </v-col>
-
-    <v-col cols="12"  sm="6" v-if=" rooms.length%2 === 1 && index === rooms.length-1">
-      <chart :name="rooms[index]"/>
-    </v-col>
-
-  </v-row>
-
-<!--   <chart :labels="['31','42','3123']"  :data="getData" :name="'K'" :id="'K'"/>-->
-
- </div>
-<!--  <v-btn @click="this.test()">-->
-<!--    Click-->
-<!--  </v-btn>-->
+<!--    <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">-->
+<!--      <chart :name="rooms[index-1]"/>-->
+<!--    </v-col>-->
+<!--    <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">-->
+<!--      <chart :name="rooms[index]"/>-->
+<!--    </v-col>-->
+<!--    <v-col cols="12"  sm="6" v-if=" rooms.length%2 === 1 && index === rooms.length-1">-->
+<!--      <chart :name="rooms[index]"/>-->
+<!--    </v-col>-->
+<!--  </v-row>-->
+<div  class="pb-16">
+   <chart :name="rooms[index]"/>
 </div>
+ </div>
 
-
-
-
+</div>
 </template>
 
 <script>
 import  chart from '../components/ChartComponent'
-//import chart from '../components/ChartComponent'
-// import PlanetChart from '../components/NumberOfPeopleChart.vue'
-// import NrOfPeople from  '../components/DisplayNrOfPeople'
 import axios from "axios";
-const GET_ROOMS_URL = 'http://localhost:5000/api/people_flow/rooms';
+import config from "../config/configuration";
+
+const GET_ROOMS_URL = 'http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/rooms';
 
 export default {
 
   components: {
-    // PlanetChart,
-    // NrOfPeople
-   // chart
     chart
   },
   data(){
     return{
       rooms:[],
-      testData:[[1,2,3],[100,900,100]]
     }
   },
   methods:{
@@ -81,7 +66,6 @@ export default {
   async mounted() {
 
     this.rooms = await this.getRooms();
-
   }
 }
 </script>

@@ -11,22 +11,24 @@
     >
     <!--   ***************Search bar****************   -->
 
-      <template v-slot:top>
+      <template v-slot:top >
         <v-text-field
             v-model="search"
             label="Search"
             class="mx-4"
         ></v-text-field>
 
-        <v-row no-gutters>
+        <v-row no-gutters >
           <v-col
+
               cols="12"
               sm="12"
+
           >
             <v-card
-                class="pa-2"
                 outlined
                 tile
+
             >
               <v-card
                   flat
@@ -103,6 +105,7 @@
           <v-col
               cols="6"
               lg="3"
+              class="pl-5"
           >
             <v-menu
                 v-model="datePicker1"
@@ -139,6 +142,7 @@
           <v-col
               cols="6"
               lg="3"
+              class="pl-5"
           >
             <v-menu
                 v-model="datePicker2"
@@ -177,6 +181,7 @@
           <v-col
               cols="6"
               sm="3"
+              class="pl-5"
           >
             <v-menu
                 ref="menu"
@@ -217,6 +222,7 @@
           <v-col
               cols="6"
               sm="3"
+              class="pl-5"
           >
             <v-dialog
                 ref="dialog"
@@ -269,9 +275,10 @@
 
 <script>
 import axios from "axios";
+import config from "../config/configuration"
 
-const processedDataURL  = 'http://localhost:5000/api/sensor_data/process_data'
-const avalabileRoomsURL = 'http://localhost:5000/api/people_flow/rooms'
+const processedDataURL  = 'http://'+ config.SERVER +':'+ config.PORT+'/api/process_data'
+const avalabileRoomsURL ='http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/rooms'
 
 const RSSI              = 'RSSI'
 const LAST_ACTIVE       = 'LAST_ACTIVE'
@@ -312,7 +319,7 @@ export default {
       filetedProcessedData = this.filterDate(filetedProcessedData)
       filetedProcessedData = this.filterTime(filetedProcessedData)
       filetedProcessedData = this.filterRoom(filetedProcessedData)
-
+      console.log(filetedProcessedData)
       return filetedProcessedData
     },
     headers () {
