@@ -1,100 +1,87 @@
 <template>
 
-  <v-container>
-    <v-row>
-<v-col>
-      <v-sheet color="rgba(0, 0, 0, .12)">
-        <v-sparkline
-            :value="value"
-            color="rgba(255, 255, 255, .7)"
-            height="100"
-            padding="24"
-            stroke-linecap="round"
-            smooth
-        >
-          <template v-slot:label="item">
-            ${{ item.value }}
-          </template>
-        </v-sparkline>
-      </v-sheet>
-   </v-col>
-      <v-col>
+
+<div>
+
+  <div class="text-center mb-16 ">
+     <h1>
+       Rooms Occupation
+     </h1>
+  </div>
 
 
-        <v-sheet color="rgba(0, 0, 0, .12)">
-          <v-sparkline
-              :value="value"
-              color="rgba(255, 255, 255, .7)"
-              height="100"
-              padding="24"
-              stroke-linecap="round"
-              smooth
-          >
-            <template v-slot:label="item">
-              ${{ item.value }}
-            </template>
-          </v-sparkline>
-        </v-sheet>
-      </v-col>
+ <div v-for="(item,index) in rooms.length" :key="item">
 
+  <v-row >
 
+    <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">
+      <chart :name="rooms[index-1]"/>
 
-    </v-row>
-    <v-row>
-      <v-col>
-        <v-sheet color="rgba(0, 0, 0, .12)">
-          <v-sparkline
-              :value="value"
-              color="rgba(255, 255, 255, .7)"
-              height="100"
-              padding="24"
-              stroke-linecap="round"
-              smooth
-          >
-            <template v-slot:label="item">
-              ${{ item.value }}
-            </template>
-          </v-sparkline>
-        </v-sheet>
-      </v-col>
-      <v-col>
+    </v-col>
+    <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">
+      <chart :name="rooms[index]"/>
+    </v-col>
 
+    <v-col cols="12"  sm="6" v-if=" rooms.length%2 === 1 && index === rooms.length-1">
+      <chart :name="rooms[index]"/>
+    </v-col>
 
-        <v-sheet color="rgba(0, 0, 0, .12)">
-          <v-sparkline
-              :value="value"
-              color="rgba(255, 255, 255, .7)"
-              height="100"
-              padding="24"
-              stroke-linecap="round"
-              smooth
-          >
-            <template v-slot:label="item">
-              ${{ item.value }}
-            </template>
-          </v-sparkline>
-        </v-sheet>
-      </v-col>
+  </v-row>
+
+<!--   <chart :labels="['31','42','3123']"  :data="getData" :name="'K'" :id="'K'"/>-->
+
+ </div>
+<!--  <v-btn @click="this.test()">-->
+<!--    Click-->
+<!--  </v-btn>-->
+</div>
 
 
 
-    </v-row>
-  </v-container>
+
 </template>
 
 <script>
+import  chart from '../components/ChartComponent'
+//import chart from '../components/ChartComponent'
+// import PlanetChart from '../components/NumberOfPeopleChart.vue'
+// import NrOfPeople from  '../components/DisplayNrOfPeople'
+import axios from "axios";
+const GET_ROOMS_URL = 'http://localhost:5000/api/people_flow/rooms';
+
 export default {
-  data: () => ({
-    value: [
-      423,
-      446,
-      675,
-      510,
-      590,
-      610,
-      760,
-    ],
-  }),
+
+  components: {
+    // PlanetChart,
+    // NrOfPeople
+   // chart
+    chart
+  },
+  data(){
+    return{
+      rooms:[],
+      testData:[[1,2,3],[100,900,100]]
+    }
+  },
+  methods:{
+    async getRooms(){
+      let rooms =[]
+      let roomsObj = await axios.get(GET_ROOMS_URL)
+      roomsObj = [...roomsObj['data']]
+      for(let i in roomsObj)
+      {
+        rooms.push(roomsObj[i]['ROOM'])
+      }
+      return rooms
+    },
+
+
+  },
+
+  async mounted() {
+
+    this.rooms = await this.getRooms();
+
+  }
 }
 </script>
-

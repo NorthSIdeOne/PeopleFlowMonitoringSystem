@@ -39,4 +39,10 @@ exports.getNrOfPeople =async function() {
 
 };
 
+exports.getRoomData =async function(room){
+
+    const GET_ROOM_DATA = `SELECT *  FROM ${config.PEOPLE_FLOW} WHERE ROOM='${room}'`;
+    return await (new dbCon).queryDatabase(GET_ROOM_DATA);
+}
+
 
