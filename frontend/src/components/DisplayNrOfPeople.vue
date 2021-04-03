@@ -1,20 +1,20 @@
 <template>
-  <div class="pl-10">
+  <div>
 
 
   <v-card
       class="mx-auto"
       cols="12"
       sm="12"
-      max-width="700"
-      max-height="100"
+      max-width="100"
+      max-height="60"
 
   >
     <v-card-title>
       <v-icon
           :color="checking ? 'red lighten-2' : 'indigo'"
           class="mr-12"
-          size="48"
+          size="20"
           @click="takePulse"
       >
         mdi mdi-account
@@ -25,7 +25,7 @@
         </div>
         <div>
           <span
-              class="display-2 font-weight-black"
+
               v-text="avg|| '—'"
           ></span>
           <strong v-if="avg">PEOPLE</strong>
@@ -34,6 +34,7 @@
       <v-spacer></v-spacer>
     </v-card-title>
   </v-card>
+
   </div>
 </template>
 

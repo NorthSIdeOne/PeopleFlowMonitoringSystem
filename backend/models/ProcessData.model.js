@@ -104,7 +104,7 @@ let processData = class ProcessDataClass{
      * Query to get all nodes information from the databse
      * | MAC | NAME | TIME |
      *
-     * @GET_NODE_INFORMATIONS {string}
+     * @GET_nodeConfigurationsFORMATIONS {string}
      */
     GET_NODE_INFORMATIONS = `SELECT * FROM ${config.NODES_INFORMATIONS}`;
 

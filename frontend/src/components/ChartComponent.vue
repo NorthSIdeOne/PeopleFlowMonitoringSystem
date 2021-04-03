@@ -1,7 +1,13 @@
 <template>
   <div>
-    <v-row class="pl-16 ml-5 mr-16 pt-5 " >
-      <v-col cols="12" sm="3" >
+    <v-card>
+ <v-card-title  >
+
+   <h3 style="color:#1d8dd7"> {{name}} </h3>
+
+ </v-card-title>
+    <v-row class="ml-16  mr-10 pt-5" >
+      <v-col cols="12" sm="3" class="pl-16">
         <v-menu
             v-model="datePicker1"
             :close-on-content-click="false"
@@ -28,7 +34,7 @@
           ></v-date-picker>
         </v-menu>
       </v-col>
-      <v-col cols="12" sm="3" >
+      <v-col cols="12" sm="3" class="pl-16">
         <v-menu
             ref="menu"
             v-model="timePicker1"
@@ -58,7 +64,7 @@
           ></v-time-picker>
         </v-menu>
       </v-col>
-      <v-col cols="12" sm="3" >
+      <v-col cols="12" sm="3" class="pl-16">
 
         <v-dialog
             ref="dialog"
@@ -108,11 +114,26 @@
         >
           Apply
         </v-btn>
+        <v-btn
+            depressed
+            color="primary"
+            @click="reset()"
+            class="ml-5"
+        >
+          Reset
+        </v-btn>
       </v-col>
+
     </v-row>
 
-    <line-chart :chart-data="datacollection" :options="this.options"></line-chart>
 
+  <v-row >
+    <v-col cols="12" sm="11" class="pl-10">
+    <line-chart :chart-data="datacollection" :options="this.options"></line-chart>
+    </v-col>
+  </v-row>
+
+    </v-card>
   </div>
 
 </template>
@@ -121,10 +142,11 @@
 import LineChart from './LineChart.js'
 import axios from "axios";
 
+
 export default {
   props:['name'],
   components: {
-    LineChart
+    LineChart,
   },
   data () {
     return {
@@ -139,6 +161,7 @@ export default {
       processedData:null,
       options: {
          responsive: true,
+        maintainAspectRatio:false,
          lineTension: 1,
          scales: {
                    yAxes: [
@@ -161,6 +184,13 @@ export default {
     await this.fillData()
   },
   methods: {
+    async reset(){
+
+      this.date1=null;
+      this.time1=null;
+      this.time2=null;
+      await this.fillData()
+    },
     async fillData () {
 
       [this.times,this.processedData] = await this.getData();

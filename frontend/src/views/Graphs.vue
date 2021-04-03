@@ -2,37 +2,33 @@
 
 
 <div>
-
   <div class="text-center mb-16 ">
      <h1>
        Rooms Occupation
      </h1>
+
   </div>
 
+ <div v-for="(item,index) in rooms.length" :key="item" >
 
- <div v-for="(item,index) in rooms.length" :key="item">
+<!--  <v-row >-->
 
-  <v-row >
-
-    <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">
-      <chart :name="rooms[index-1]"/>
-    </v-col>
-    <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">
-      <chart :name="rooms[index]"/>
-    </v-col>
-
-    <v-col cols="12"  sm="6" v-if=" rooms.length%2 === 1 && index === rooms.length-1">
-      <chart :name="rooms[index]"/>
-    </v-col>
-
-  </v-row>
+<!--    <v-col cols="12"  sm="6" v-if="index % 2 === 1 ">-->
+<!--      <chart :name="rooms[index-1]"/>-->
+<!--    </v-col>-->
+<!--    <v-col cols="12"  sm="6" v-if=" (index+1) % 2 === 0 ">-->
+<!--      <chart :name="rooms[index]"/>-->
+<!--    </v-col>-->
+<!--    <v-col cols="12"  sm="6" v-if=" rooms.length%2 === 1 && index === rooms.length-1">-->
+<!--      <chart :name="rooms[index]"/>-->
+<!--    </v-col>-->
+<!--  </v-row>-->
+<div  class="pb-16">
+   <chart :name="rooms[index]"/>
+</div>
  </div>
 
 </div>
-
-
-
-
 </template>
 
 <script>
@@ -48,7 +44,6 @@ export default {
   data(){
     return{
       rooms:[],
-      testData:[[1,2,3],[100,900,100]]
     }
   },
   methods:{

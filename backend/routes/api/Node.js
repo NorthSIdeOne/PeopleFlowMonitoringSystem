@@ -25,10 +25,7 @@ router.get('/',async (req,res)=>{
 });
 
 
-router.get('/process_data',async (req,res)=>{
 
-    res.send(await proccessDataView.getProcessedData());
-    console.log("PROCESSED_DATA")
-});
+
 
 module.exports = router;
