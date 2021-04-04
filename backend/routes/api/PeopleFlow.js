@@ -26,5 +26,9 @@ router.get('/nr_of_people',async (req,res)=>{
     console.log("Get nr_of_people")
 });
 
+router.get('/room/:name',async (req,res)=>{
+    res.send((await proccessDataView.getRoomData(req.params['name'])))
+});
+
 
 module.exports = router;

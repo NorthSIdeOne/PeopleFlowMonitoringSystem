@@ -40,6 +40,7 @@
           <div id="app">
           <router-link to="/proccessdata"></router-link>
             <router-link to="/graphs"></router-link>
+            <router-link to="/nodeconfiguration"></router-link>
           </div>
           <router-view/>
 
