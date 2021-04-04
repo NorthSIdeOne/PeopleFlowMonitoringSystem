@@ -47,7 +47,7 @@
         </v-list-item-icon>
         <v-list-item-title>Grphics</v-list-item-title>
       </v-list-item>
-      <v-list-item link>
+      <v-list-item link href="/nodeconfiguration">
         <v-list-item-icon>
           <v-icon>mdi-radio-tower
           </v-icon>
