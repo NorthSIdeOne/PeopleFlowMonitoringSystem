@@ -141,7 +141,7 @@
 <script>
 import LineChart from './LineChart.js'
 import axios from "axios";
-
+import config from '../config/configuration'
 
 export default {
   props:['name'],
@@ -214,7 +214,7 @@ export default {
       }
     },
     async getData(){
-      const GET_ROOM_DATA= `http://localhost:5000/api/people_flow/room/${this.name}`;
+      const GET_ROOM_DATA= 'http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/room/'+this.name
       let times = []
       let processedData = []
       let roomsObj = await axios.get(GET_ROOM_DATA)

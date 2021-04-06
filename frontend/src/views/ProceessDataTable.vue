@@ -275,9 +275,10 @@
 
 <script>
 import axios from "axios";
+import config from "../config/configuration"
 
-const processedDataURL  = 'http://localhost:5000/api/process_data'
-const avalabileRoomsURL = 'http://localhost:5000/api/people_flow/rooms'
+const processedDataURL  = 'http://'+ config.SERVER +':'+ config.PORT+'/api/process_data'
+const avalabileRoomsURL ='http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/rooms'
 
 const RSSI              = 'RSSI'
 const LAST_ACTIVE       = 'LAST_ACTIVE'
