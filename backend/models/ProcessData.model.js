@@ -417,13 +417,6 @@ let processData = class ProcessDataClass{
 
             }
             if(checkMAC === false){
-                for(var index3 = 0 ;index3 < blacklistSSID.length; index3++){
-                    if(unproccesedData[index1].SSID === blacklistSSID[index3].SSID) {
-                        checkSSID = true;
-                        index3 = blacklistSSID.length;
-                    }
-                }
-                if(checkSSID === false)
                     filteredData.push(unproccesedData[index1])
             }
 
