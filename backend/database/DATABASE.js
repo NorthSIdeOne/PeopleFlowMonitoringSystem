@@ -92,8 +92,8 @@ let mysqlDB = class DataBaseClass{
                                         CHANNEL_HOPPING INT(255) NOT NULL)`;
 
 
-    CREATE_BLACKLIST                  = `CREATE TABLE IF NOT EXISTS ${config.BLACKLIST}(
-                                        SSID VARCHAR(255) NOT NULL)`;
+    CREATE_ALLOWLIST                  = `CREATE TABLE IF NOT EXISTS ${config.ALLOWLIST}(
+                                        NAME VARCHAR(255) NOT NULL,MAC VARCHAR(255) NOT NULL)`;
 
     /**
      *This function is used to return a query function
@@ -221,7 +221,7 @@ let mysqlDB = class DataBaseClass{
             await this.createTables(this.CREATE_PEOPLE_FLOW,config.PEOPLE_FLOW);
             await this.createTables(this.CREATE_PROCESSED_DATA,config.PROCESSED_DATA);
             await this.createTables(this.CREATE_NODES_CONFIGURATION,config.NODES_CONFIGURATION);
-            await this.createTables(this.CREATE_BLACKLIST,config.BLACKLIST);
+            await this.createTables(this.CREATE_ALLOWLIST,config.ALLOWLIST);
 
         }
         catch (err){

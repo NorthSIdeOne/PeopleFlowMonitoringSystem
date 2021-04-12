@@ -108,6 +108,9 @@ let processData = class ProcessDataClass{
      */
     GET_NODE_INFORMATIONS = `SELECT * FROM ${config.NODES_INFORMATIONS}`;
 
+
+    GET_ALLOW_LIST = `SELECT DISTINCT MAC FROM ${config.ALLOWLIST}`;
+
     /**
      * Query to get all the know MACS from the
      * database.
@@ -117,7 +120,7 @@ let processData = class ProcessDataClass{
 
     GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
 
-    GET_BLACKLIST_SSID    =  `SELECT * FROM ${config.BLACKLIST}`;
+
     /**
      * Query to insert proccessed data into the database
      * @config.PROCESSED_DATA {The table in which proccessed data is inserted}
@@ -396,32 +399,55 @@ let processData = class ProcessDataClass{
    async filterMAC(unproccesedData,nodeInformations){
         let blacklistMAC = [];
         let filteredData = [];
-        let blacklistSSID = await this.extractData(this.GET_BLACKLIST_SSID);
         let checkMAC;
-        let checkSSID;
 
         nodeInformations.forEach(element => blacklistMAC.push({
             "MAC" : element.MAC
         }));
 
+
+
         for(var index1 = 0 ; index1 < unproccesedData.length ; index1 ++ )
         {
             checkMAC  = false;
-            checkSSID = false;
             for(var index2 =0 ; index2 < blacklistMAC.length;  index2++)
             {
                 if(unproccesedData[index1].MAC === blacklistMAC[index2].MAC) {
                     checkMAC = true;
                     index2 = blacklistMAC.length;
                 }
-
             }
             if(checkMAC === false){
-                    filteredData.push(unproccesedData[index1])
+                filteredData.push(unproccesedData[index1])
             }
 
         }
+        filteredData = await this.whiteListData(filteredData);
         return  filteredData;
+
+    }
+
+    async whiteListData(allData){
+        let allowList = await this.extractData(this.GET_ALLOW_LIST);
+        let filteredData = [];
+        let whiteList = [];
+
+        allowList.forEach(element => whiteList.push({
+            "MAC" : element.MAC
+        }));
+
+        for(var index1 = 0 ; index1 < allData.length ; index1 ++)
+        {
+
+            for(var index2 =0 ; index2 < whiteList.length;  index2++)
+            {
+                if(allData[index1].MAC === whiteList[index2].MAC) {
+                    filteredData.push(allData[index1])
+                }
+            }
+        }
+
+        return filteredData
 
     }
 
