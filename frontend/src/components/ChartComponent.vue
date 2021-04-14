@@ -219,9 +219,9 @@ export default {
 
         }else {
           let currentData = new Date();
-          const date = currentData.getFullYear() + '-' + ("0" + currentData.getMonth()).slice(-2) + '-' + ("0" +currentData.getDay()).slice(-2);
-          const time1 = ("0" +currentData.getHours()).slice(-2) + '-' + ("0" + currentData.getMinutes()).slice(-2);
-          const time2 = ("0"+(currentData.getHours() + 3)).slice(-2) + '-' + ("0" +currentData.getMinutes()).slice(-2);
+          const date = currentData.getFullYear() + '-' + ("0" + (currentData.getMonth() + 1)).slice(-2) + '-' + ("0" +currentData.getDate()).slice(-2);
+          const time1 = ("0"+(currentData.getHours() - 3)).slice(-2) + '-' + ("0" + currentData.getMinutes()).slice(-2);
+          const time2 = ("0"+(currentData.getHours())).slice(-2) + '-' + ("0" +currentData.getMinutes()).slice(-2);
           GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/'+date+'/'+time1 + '/'+time2;
         }
 
