@@ -126,7 +126,6 @@
 
     </v-row>
 
-
   <v-row >
     <v-col cols="12" sm="11" class="pl-10">
     <line-chart :chart-data="datacollection" :options="this.options"></line-chart>
@@ -195,10 +194,6 @@ export default {
 
       [this.times,this.processedData] = await this.getData();
 
-
-      [this.times,this.processedData] = this.filterDate(this.times,this.processedData,this.date1);
-      [this.times,this.processedData] = this.filterHours(this.times,this.processedData,this.time1,this.time2);
-
       this.times = this.dateFormat(this.times)
 
       this.datacollection = {
@@ -214,21 +209,32 @@ export default {
       }
     },
     async getData(){
-      const GET_ROOM_DATA= 'http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/room/'+this.name
+      let GET_ROOM_DATA = null;
+
+        if(this.date1 !== null && (this.time1 === null || this.time2 === null)){
+         GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + this.date1;
+        }
+        else if(this.date1 !== null && (this.time1 !== null && this.time2 !== null)){
+          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + this.date1+'/'+this.time1 + '/'+this.time2;
+
+        }else {
+          let currentData = new Date();
+          const date = currentData.getFullYear() + '-' + currentData.getMonth() + '-' + currentData.getDay();
+          const time1 = currentData.getHours() + '-' + currentData.getMinutes();
+          const time2 = (currentData.getHours() + 3) + '-' + currentData.getMinutes();
+          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + date+'/'+time1 + '/'+time2;
+        }
+
       let times = []
       let processedData = []
       let roomsObj = await axios.get(GET_ROOM_DATA)
       roomsObj = [...roomsObj['data']]
       for(let i in roomsObj)
       {
-       // times.push( (new Date(roomsObj[i]['TIME'])).getHours() + ":" + (new Date(roomsObj[i]['TIME'])).getMinutes() + ":" +  (new Date(roomsObj[i]['TIME'])).getSeconds())
         times.push((roomsObj[i]['TIME']))
         processedData.push(roomsObj[i]['NR_OF_PEOPLE'])
 
       }
-      // const rand = this.getRandomInt()
-      //
-      // return [ times.slice(times.length -rand ,times.length) ,processedData.slice(processedData.length -rand,processedData.length)]
 
       return [times,processedData]
     },
@@ -297,9 +303,6 @@ export default {
       return time
     },
 
-    getRandomInt () {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5
-    }
   }
 }
 </script>
