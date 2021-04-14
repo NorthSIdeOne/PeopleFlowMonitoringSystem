@@ -298,7 +298,7 @@ export default {
     dateFormat(dates){
       let time = []
       for(let i in dates){
-        time.push( new Date(dates[i]).getHours() + ":" + new Date(dates[i]).getMinutes() + ":" +  new Date(dates[i]).getSeconds())
+        time.push( ("0" + new Date(dates[i]).getHours()).slice(-2) + ":" + ("0" + new Date(dates[i]).getMinutes()).slice(-2) + ":" + ("0" + new Date(dates[i]).getSeconds()).slice(-2))
       }
       return time
     },
