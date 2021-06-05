@@ -4,6 +4,7 @@ import Home from '../views/Home.vue'
 import ProceessDataTable from  '../views/ProceessDataTable.vue'
 import Graphs from  '../views/Graphs'
 import NodeConfiguration from "@/views/NodeConfiguration";
+import AllowList from "@/views/AllowList";
 Vue.use(VueRouter)
 
 const routes = [
@@ -28,6 +29,11 @@ const routes = [
     path: '/nodeconfiguration',
     name: 'NodeConfiguration',
     component: NodeConfiguration
+  },
+  {
+    path: '/allowlist',
+    name: 'AllowList',
+    component: AllowList
   },
 
 ]

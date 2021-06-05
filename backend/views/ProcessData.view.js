@@ -104,5 +104,68 @@ exports.insertNodeConfiguration =async function(req,res){
     await (new dbCon).queryDatabase(INSERT_NODE_CONFIGURATION);
 };
 
+exports.getAllowList = async function(){
+    const GET_ALLOW_LIST = `SELECT *  FROM ${config.ALLOWLIST}`;
+    return await (new dbCon).queryDatabase(GET_ALLOW_LIST);
+}
 
+exports.updateAllowList =async function(req,res){
+
+    const UPDATE_ALLOW_LIST =`UPDATE ${config.ALLOWLIST} SET
+                                      NAME="${req.body['newData']['NAME']}",
+                                      MAC="${req.body['newData']['MAC']}",
+                                      Activated="${req.body['newData']['Activated']}"
+                                      WHERE NAME="${req.body['oldData']['NAME']}"AND
+                                      MAC="${req.body['oldData']['MAC']}" AND
+                                      Activated="${req.body['oldData']['Activated']}"`
+
+    await (new dbCon).queryDatabase(UPDATE_ALLOW_LIST);
+
+};
+
+exports.insertAllowList =async function(req,res){
+
+    const INSERT_ALLOW_LIST =`INSERT INTO ${config.ALLOWLIST} (NAME,MAC,Activated) 
+                                     VALUES ("${req.body['data']['NAME']}","${req.body['data']['MAC']}","${req.body['data']['Activated']}")`;
+
+    console.log(INSERT_ALLOW_LIST)
+    await (new dbCon).queryDatabase(INSERT_ALLOW_LIST);
+};
+
+exports.deleteAllowList =async function(req,res){
+
+    const DELETE_ALLOW_LIST =`DELETE FROM ${config.ALLOWLIST} 
+                                      WHERE NAME="${req.body['data']['NAME']}"AND
+                                      MAC="${req.body['data']['MAC']}" 
+                                      AND Activated="${req.body['data']['Activated']}"`
+
+    await (new dbCon).queryDatabase(DELETE_ALLOW_LIST);
+};
+
+exports.disableAll =async function(req,res){
+
+    const DISABLE =`UPDATE ${config.ALLOWLIST} SET
+                                      Activated="0"
+                                      WHERE Activated="1"`
+
+    await (new dbCon).queryDatabase(DISABLE);
+};
+
+exports.enableAll =async function(req,res){
+
+    const ENABLE =`UPDATE ${config.ALLOWLIST} SET
+                                      Activated="1"
+                                      WHERE Activated="0"`
+
+    await (new dbCon).queryDatabase(ENABLE);
+};
+
+exports.countEnable =async function(req,res){
+
+    const ENABLE =`SELECT COUNT(NAME) ${config.ALLOWLIST} SET
+                                      Activated="1"
+                                      WHERE Activated="0"`
+
+    await (new dbCon).queryDatabase(ENABLE);
+};
 

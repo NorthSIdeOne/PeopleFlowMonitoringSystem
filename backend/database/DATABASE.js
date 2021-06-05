@@ -93,7 +93,7 @@ let mysqlDB = class DataBaseClass{
 
 
     CREATE_ALLOWLIST                  = `CREATE TABLE IF NOT EXISTS ${config.ALLOWLIST}(
-                                        NAME VARCHAR(255) NOT NULL,MAC VARCHAR(255) NOT NULL)`;
+                                        NAME VARCHAR(255) NOT NULL,MAC VARCHAR(255) NOT NULL, Activated int DEFAULT 1)`;
 
     /**
      *This function is used to return a query function

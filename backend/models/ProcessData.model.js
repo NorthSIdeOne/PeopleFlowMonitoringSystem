@@ -109,7 +109,7 @@ let processData = class ProcessDataClass{
     GET_NODE_INFORMATIONS = `SELECT * FROM ${config.NODES_INFORMATIONS}`;
 
 
-    GET_ALLOW_LIST = `SELECT DISTINCT MAC FROM ${config.ALLOWLIST}`;
+    GET_ALLOW_LIST = `SELECT DISTINCT MAC FROM ${config.ALLOWLIST} WHERE Activated = 1`;
 
     /**
      * Query to get all the know MACS from the
@@ -118,7 +118,7 @@ let processData = class ProcessDataClass{
      * @GET_KNOW_MAC {string}
      */
 
-    GET_KNOW_MAC          = `SELECT * FROM ${config.KNOWN_MAC}`;
+    GET_KNOW_MAC          = `SELECT MAC, NAME AS PERSON_NAME FROM ${config.ALLOWLIST}`;
 
 
     /**
@@ -165,6 +165,7 @@ let processData = class ProcessDataClass{
          this.distinctMAC       =  await this.extractData(this.GET_DISTINCT_MACS);
          this.nodesInformations =  await this.extractData(this.GET_NODE_INFORMATIONS);
          this.knownMAC          =  await this.extractData(this.GET_KNOW_MAC);
+         console.log(this.knownMAC)
 
      }
 
@@ -429,6 +430,8 @@ let processData = class ProcessDataClass{
 
     async whiteListData(allData){
         let allowList = await this.extractData(this.GET_ALLOW_LIST);
+        if(allowList.length === 0)
+            return allData
         let filteredData = [];
         let whiteList = [];
 

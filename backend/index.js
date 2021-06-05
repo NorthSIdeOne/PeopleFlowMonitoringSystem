@@ -4,6 +4,8 @@ const iotDevice = require('./routes/api/Node');
 const processData =  require('./routes/api/ProcessedData');
 const peopleFlow =  require('./routes/api/PeopleFlow');
 const nodeConfiguration = require('./routes/api/NodeConfigurations');
+const allowlist = require('./routes/api/AllowList');
+
 const cors = require('cors');
 
 
@@ -19,6 +21,7 @@ app.use('/api/sensor_data',iotDevice);
 app.use('/api/process_data',processData);
 app.use('/api/people_flow',peopleFlow);
 app.use('/api/node_configurations',nodeConfiguration);
+app.use('/api/allow_list',allowlist);
 
 app.get('/', (req, res) => {
     res.send("Hello World");

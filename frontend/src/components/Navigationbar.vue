@@ -47,20 +47,21 @@
         </v-list-item-icon>
         <v-list-item-title>Grphics</v-list-item-title>
       </v-list-item>
-      <v-list-item link href="/nodeconfiguration">
-        <v-list-item-icon>
-          <v-icon>mdi-radio-tower
-          </v-icon>
-        </v-list-item-icon>
-        <v-list-item-title>Node configuration</v-list-item-title>
-      </v-list-item>
+<!--      <v-list-item link href="/nodeconfiguration">-->
+<!--        <v-list-item-icon>-->
+<!--          <v-icon>mdi-radio-tower-->
+<!--          </v-icon>-->
+<!--        </v-list-item-icon>-->
+<!--        <v-list-item-title>Node configuration</v-list-item-title>-->
+<!--      </v-list-item>-->
 
-      <v-list-item link>
+
+      <v-list-item link href="/allowlist">
         <v-list-item-icon>
           <v-icon>mdi-account-cancel
           </v-icon>
         </v-list-item-icon>
-        <v-list-item-title>Black list</v-list-item-title>
+        <v-list-item-title>Allow List</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
