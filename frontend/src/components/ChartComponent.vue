@@ -219,10 +219,10 @@ export default {
 
         }else {
           let currentData = new Date();
-          const date = currentData.getFullYear() + '-' + currentData.getMonth() + '-' + currentData.getDay();
-          const time1 = currentData.getHours() + '-' + currentData.getMinutes();
-          const time2 = (currentData.getHours() + 3) + '-' + currentData.getMinutes();
-          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + date+'/'+time1 + '/'+time2;
+          const date = currentData.getFullYear() + '-' + ("0" + (currentData.getMonth() + 1)).slice(-2) + '-' + ("0" +currentData.getDate()).slice(-2);
+          const time1 = ("0"+(currentData.getHours() - 3)).slice(-2) + '-' + ("0" + currentData.getMinutes()).slice(-2);
+          const time2 = ("0"+(currentData.getHours())).slice(-2) + '-' + ("0" +currentData.getMinutes()).slice(-2);
+          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/'+date+'/'+time1 + '/'+time2;
         }
 
       let times = []
@@ -298,7 +298,7 @@ export default {
     dateFormat(dates){
       let time = []
       for(let i in dates){
-        time.push( new Date(dates[i]).getHours() + ":" + new Date(dates[i]).getMinutes() + ":" +  new Date(dates[i]).getSeconds())
+        time.push( ("0" + new Date(dates[i]).getHours()).slice(-2) + ":" + ("0" + new Date(dates[i]).getMinutes()).slice(-2) + ":" +  ("0" + new Date(dates[i]).getSeconds()).slice(-2))
       }
       return time
     },
