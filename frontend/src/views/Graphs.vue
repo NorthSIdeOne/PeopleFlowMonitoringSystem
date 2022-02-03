@@ -34,7 +34,9 @@
 <script>
 import  chart from '../components/ChartComponent'
 import axios from "axios";
-const GET_ROOMS_URL = 'http://localhost:5000/api/people_flow/rooms';
+import config from "../config/configuration";
+
+const GET_ROOMS_URL = 'http://'+ config.SERVER +':'+ config.PORT+'/api/people_flow/rooms';
 
 export default {
 

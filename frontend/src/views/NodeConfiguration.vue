@@ -154,6 +154,8 @@
 
 <script>
 import axios from "axios";
+import config from "../config/configuration"
+
 
 export default {
   data: () => ({
@@ -207,7 +209,7 @@ export default {
   },
   methods: {
     async initialize() {
-      const NODE_CONFIGURATION_URL = 'http://localhost:5000/api/node_configurations'
+      const NODE_CONFIGURATION_URL = 'http://'+ config.SERVER +':'+ config.PORT+'/api/node_configurations'
       let initialData = await axios.get(NODE_CONFIGURATION_URL)
       initialData = [...initialData['data']]
 
@@ -258,18 +260,18 @@ export default {
     },
     update(oldData, newData) {
       console.log(newData)
-      axios.post('http://localhost:5000/api/node_configurations/update', {
+      axios.post('http://'+ config.SERVER +':'+ config.PORT+'/api/node_configurations/update', {
         oldData: oldData,
         newData: newData
       })
     },
     insert(data) {
-      axios.post('http://localhost:5000/api/node_configurations/insert', {
+      axios.post('http://'+ config.SERVER +':'+ config.PORT+'/api/node_configurations/insert', {
         data: data
       })
     },
     delete(data) {
-      axios.post('http://localhost:5000/api/node_configurations/delete', {
+      axios.post('http://'+ config.SERVER +':'+ config.PORT+'/api/node_configurations/delete', {
         data: data
       })
     }

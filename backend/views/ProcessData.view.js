@@ -45,6 +45,21 @@ exports.getRoomData =async function(room){
     return await (new dbCon).queryDatabase(GET_ROOM_DATA);
 }
 
+exports.getRoomDataForTimeFull = async function(room,date,time1,time2){
+
+    const GET_ROOM_DATA_BY_TIME = `SELECT *  FROM ${config.PEOPLE_FLOW} WHERE ROOM='${room}' AND
+                                    TIME >= '${date} ${time1}' AND TIME <= '${date} ${time2}'`;
+    return await (new dbCon).queryDatabase(GET_ROOM_DATA_BY_TIME);
+}
+
+exports.getRoomDataForSpecificDate = async function(room,date){
+
+    const GET_ROOM_DATA_BY_TIME = `SELECT *  FROM ${config.PEOPLE_FLOW} WHERE ROOM='${room}' AND
+                                    TIME  BETWEEN '${date} 00:00:00.00' AND '${date} 23:59:59.999'`;
+    return await (new dbCon).queryDatabase(GET_ROOM_DATA_BY_TIME);
+}
+
+
 exports.getNodeConfigurations = async function(){
     const GET_NODES_INFORMATIONS = `SELECT *  FROM ${config.NODES_INFORMATIONS}`;
     return await (new dbCon).queryDatabase(GET_NODES_INFORMATIONS);

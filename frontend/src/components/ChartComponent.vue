@@ -126,7 +126,6 @@
 
     </v-row>
 
-
   <v-row >
     <v-col cols="12" sm="11" class="pl-10">
     <line-chart :chart-data="datacollection" :options="this.options"></line-chart>
@@ -141,7 +140,7 @@
 <script>
 import LineChart from './LineChart.js'
 import axios from "axios";
-
+import config from '../config/configuration'
 
 export default {
   props:['name'],
@@ -195,10 +194,6 @@ export default {
 
       [this.times,this.processedData] = await this.getData();
 
-
-      [this.times,this.processedData] = this.filterDate(this.times,this.processedData,this.date1);
-      [this.times,this.processedData] = this.filterHours(this.times,this.processedData,this.time1,this.time2);
-
       this.times = this.dateFormat(this.times)
 
       this.datacollection = {
@@ -214,21 +209,32 @@ export default {
       }
     },
     async getData(){
-      const GET_ROOM_DATA= `http://localhost:5000/api/people_flow/room/${this.name}`;
+      let GET_ROOM_DATA = null;
+
+        if(this.date1 !== null && (this.time1 === null || this.time2 === null)){
+         GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + this.date1;
+        }
+        else if(this.date1 !== null && (this.time1 !== null && this.time2 !== null)){
+          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/' + this.date1+'/'+this.time1 + '/'+this.time2;
+
+        }else {
+          let currentData = new Date();
+          const date = currentData.getFullYear() + '-' + ("0" + (currentData.getMonth() + 1)).slice(-2) + '-' + ("0" +currentData.getDate()).slice(-2);
+          const time1 = ("0"+(currentData.getHours() - 3)).slice(-2) + '-' + ("0" + currentData.getMinutes()).slice(-2);
+          const time2 = ("0"+(currentData.getHours())).slice(-2) + '-' + ("0" +currentData.getMinutes()).slice(-2);
+          GET_ROOM_DATA = 'http://' + config.SERVER + ':' + config.PORT + '/api/people_flow/room/' + this.name + '/'+date+'/'+time1 + '/'+time2;
+        }
+
       let times = []
       let processedData = []
       let roomsObj = await axios.get(GET_ROOM_DATA)
       roomsObj = [...roomsObj['data']]
       for(let i in roomsObj)
       {
-       // times.push( (new Date(roomsObj[i]['TIME'])).getHours() + ":" + (new Date(roomsObj[i]['TIME'])).getMinutes() + ":" +  (new Date(roomsObj[i]['TIME'])).getSeconds())
         times.push((roomsObj[i]['TIME']))
         processedData.push(roomsObj[i]['NR_OF_PEOPLE'])
 
       }
-      // const rand = this.getRandomInt()
-      //
-      // return [ times.slice(times.length -rand ,times.length) ,processedData.slice(processedData.length -rand,processedData.length)]
 
       return [times,processedData]
     },
@@ -292,14 +298,11 @@ export default {
     dateFormat(dates){
       let time = []
       for(let i in dates){
-        time.push( new Date(dates[i]).getHours() + ":" + new Date(dates[i]).getMinutes() + ":" +  new Date(dates[i]).getSeconds())
+        time.push( ("0" + new Date(dates[i]).getHours()).slice(-2) + ":" + ("0" + new Date(dates[i]).getMinutes()).slice(-2) + ":" +  ("0" + new Date(dates[i]).getSeconds()).slice(-2))
       }
       return time
     },
 
-    getRandomInt () {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5
-    }
   }
 }
 </script>
